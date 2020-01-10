@@ -1,6 +1,7 @@
 
 -------------主要内容-------------
 对控制依赖的支持
+动态跟踪接口
 策略接口实现 trace → constraint
 
 动态跟踪的实现：<行, 列, 定值>
@@ -25,8 +26,15 @@
 多patch构造网络 (效率 & 正确性证明)
 
 ------------资料记录-----------------
-
 kiama scala库
 scala解析 https://scalameta.org/docs/trees/guide.html#construct-trees
 c简短程序 Learning to Encode and Classify Test Executions
+
+------------git 命令--------------
+添加全部修改 git add .
+添加文件修改 git add $filepath
+提交 git commit -m "$Message"
+上传github git push -u origin master
+与上版本对比 git diff HEAD -- $filepath
+
 
