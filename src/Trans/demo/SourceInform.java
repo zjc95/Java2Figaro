@@ -2,7 +2,6 @@ package Trans.demo;
 
 import javafx.util.Pair;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.ReturnStatement;
 
 import java.util.ArrayList;
@@ -14,76 +13,104 @@ public class SourceInform {
     private int _patchID;
     private ArrayList<VarNode> _entry = new ArrayList<>();;
     private ArrayList<Stmt> _statements = new ArrayList<>();
-    private Map<String, VarNode> _vars = new HashMap<String, VarNode>();
-    private Map<String, VarNode> _ret = new HashMap<String, VarNode>();
+    private Map<String, VarNode> _vars = new HashMap<>();
+    private Map<String, VarNode> _ret = new HashMap<>();
+    private Map<String, Stmt> _stmtMap = new HashMap<>();
+    private Map<String, Assign> _assignMap = new HashMap<>();
+    private Map<String, ControlExpression> _ctrlExprMap = new HashMap<>();
 
     SourceInform() {
         _patchID = ++_patchNum;
+    }
+
+    void build() {
+        //----------Entry List------------
+        for(Stmt stmt : _statements)
+            if (stmt.getNode() instanceof MethodDeclaration)
+                for (Assign assign : stmt.getAssign())
+                    _entry.add(assign.getDef());
+
+        //----------Return List------------
+        for(Stmt stmt : _statements)
+            if (stmt.getNode() instanceof ReturnStatement)
+                for(VarNode var : stmt.getUse())
+                    addReturn(var);
+
+        //--------Statement Map-----------
+        for (Stmt stmt : _statements)
+            _stmtMap.put(stmt.getLine() + "," + stmt.getColumn(), stmt);
+
+        //----------Assign Map------------
+        for (Stmt stmt : _statements)
+            for (Assign assign : stmt.getAssign())
+                _assignMap.put(assign.getLine() + "," + assign.getColumn(), assign);
+
+        //----------Assign Map------------
+        for (Stmt stmt : _statements)
+            for (ControlExpression expr : stmt.getControlExpr())
+                _ctrlExprMap.put(expr.getLine() + "," + expr.getColumn(), expr);
     }
 
     VarNode addVar(String varID) {
         String varName = VarNode.transID2Name(varID);
         if (_vars.containsKey(varName))
             return _vars.get(varName);
-        VarNode var = new VarNode(varName, this);
+        VarNode var = new VarNode(varName);
         _vars.put(varName, var);
         return var;
     }
 
-    public VarNode getVar(String varID) {
-        String varName = VarNode.transID2Name(varID);
-        if (_vars.containsKey(varName))
-            return _vars.get(varName);
-        return null;
-    }
-
-    void buildEntryList() {
-        for(Stmt stmt : _statements)
-            if (stmt.getNode() instanceof MethodDeclaration)
-                for (Assign assign : stmt.getAssign())
-                    _entry.add(assign.getDef());
-    }
-
-    ArrayList<VarNode> getEntryList() {
-        return _entry;
-    }
-
-    void addReturn(VarNode var) {
+    private void addReturn(VarNode var) {
         String varName = var.getName();
         if (!_ret.containsKey(varName))
             _ret.put(varName, var);
-    }
-
-    void buildReturnList() {
-        for(Stmt stmt : _statements)
-            if (stmt.getNode() instanceof ReturnStatement)
-                for(VarNode var : stmt.getUse())
-                    addReturn(var);
-    }
-
-    ArrayList<VarNode> getReturnList() {
-        return new ArrayList<>(_ret.values());
     }
 
     void addStatement(Stmt stmt) {
         _statements.add(stmt);
     }
 
-    ArrayList<Stmt> getStatementList() {
-        return _statements;
-    }
+    void printAnalyzeInform() {
+        System.out.print("Entry Variables: ");
+        for (VarNode var : _entry)
+            System.out.print(var.getName() + " ");
+        System.out.println();
 
-    public int getPatchID() {
-        return _patchID;
-    }
+        System.out.print("Return Variables: ");
+        for (VarNode var : _ret.values())
+            System.out.print(var.getName() + " ");
+        System.out.println();
 
+        for (Stmt stmt : _statements) {
+            System.out.print("Stmt(" + stmt.getLine() + "," + stmt.getColumn() + "):   ");
+
+            for (Assign assign : stmt.getAssign()) {
+                System.out.print("Assign(" + assign.getLine() + "," + assign.getColumn() + ") : ");
+                System.out.print("Def[ " + assign.getDef().getName() + " ] ");
+
+                System.out.print("Use[ ");
+                ArrayList<VarNode> useList = assign.getUse();
+                for (VarNode var : useList)
+                    System.out.print(var.getName() + " ");
+                System.out.print("] ; ");
+            }
+
+            for (ControlExpression expr : stmt.getControlExpr()) {
+                System.out.print("Control(" + expr.getLine() + "," + expr.getColumn() + ") : ");
+                System.out.print("Use[ ");
+                ArrayList<VarNode> useList = expr.getUse();
+                for (VarNode var : useList)
+                    System.out.print(var.getName() + " ");
+                System.out.print("] ; ");
+            }
+            System.out.println();
+        }
+    }
 
     /***************Figaro Source Generate*********************/
     private ArrayList<Pair<String, Double>> _varObservation = new ArrayList<>();
     private Map<String, Integer> _varDefTime = new HashMap<>();
-    StringBuilder _source = null;
-
-
+    private StringBuilder _source = null;
 
     String genFigaroSource() {
         _varDefTime.clear();

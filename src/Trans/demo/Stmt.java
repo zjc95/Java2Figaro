@@ -7,16 +7,19 @@ import java.util.HashMap;
 import java.util.Map;
 
 class Stmt {
-    private int _line = 0;
-    private SourceInform _inform;
+    private int _line;
+    private int _column;
+    private Stmt _structure;
     private ASTNode _node;
     private ArrayList<Assign> _assign = new ArrayList<>();
+    private ArrayList<ControlExpression> _controlExpr = new ArrayList<>();
     private Map<String, VarNode> _use = new HashMap<>();
 
-    Stmt(SourceInform inform, ASTNode node, int line){
-        _inform = inform;
+    Stmt(ASTNode node, Stmt structure, int line, int column) {
         _node = node;
+        _structure = structure;
         _line = line;
+        _column = column;
     }
 
     ASTNode getNode() {
@@ -29,6 +32,14 @@ class Stmt {
 
     ArrayList<Assign> getAssign() {
         return _assign;
+    }
+
+    void addControlExpr(ControlExpression expr) {
+        _controlExpr.add(expr);
+    }
+
+    ArrayList<ControlExpression> getControlExpr() {
+        return _controlExpr;
     }
 
     void addUse(VarNode use) {
@@ -45,4 +56,7 @@ class Stmt {
         return _line;
     }
 
+    int getColumn() {
+        return  _column;
+    }
 }

@@ -1,6 +1,4 @@
 package Trans.demo;
-
-import jdk.nashorn.internal.codegen.CompileUnit;
 import org.eclipse.jdt.core.dom.*;
 
 import java.util.ArrayList;
@@ -12,21 +10,21 @@ public class TmpASTVisitor {
     private static final int VARIABLE_TYPE_USE = 2;
     private SourceInform _inform;
     private CompilationUnit _unit;
-    private String _file;
 
     /************************** Visit MethodDeclaration ***********************/
 
-    private VarNode visit(MethodDeclaration node, Stmt stmt, Assign assign, int type) {
-        stmt = new Stmt(_inform, node, _unit.getLineNumber(node.getStartPosition()));
+    private Stmt visit(MethodDeclaration node, Context context) {
+        Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
         _inform.addStatement(stmt);
-        process(node.getName(), null, null, VARIABLE_TYPE_NONE);
-        for (Object arg : node.parameters()) {
-            process((ASTNode) arg, stmt, assign, VARIABLE_TYPE_USE);
-        }
+
+        //process(node.getName(), context.newStmtContext(stmt, VARIABLE_TYPE_NONE));
+        Context contextParam = context.newStmtContext(stmt, VARIABLE_TYPE_DEF);
+        for (Object arg : node.parameters())
+            process((ASTNode) arg, contextParam);
+
         Block body = node.getBody();
-        if (body != null) {
-            process(body, null, null, VARIABLE_TYPE_NONE);
-        }
+        if (body != null)
+            process(body, context);
         return null;
     }
 
@@ -36,9 +34,9 @@ public class TmpASTVisitor {
      * Block:
      * { { Statement } }
      */
-    private VarNode visit(Block node, Stmt stmt, Assign assign, int type) {
+    private Stmt visit(Block node, Context context) {
         for (Object object : node.statements())
-            process((ASTNode) object, null, null, VARIABLE_TYPE_NONE);
+            process((ASTNode) object, context);
         return null;
     }
 
@@ -49,11 +47,13 @@ public class TmpASTVisitor {
      * [ < Type { , Type } > ]
      * this ( [ Expression { , Expression } ] ) ;
      */
-    private VarNode visit(ConstructorInvocation node, Stmt stmt, Assign assign, int type) {
-        stmt = new Stmt(_inform, node, _unit.getLineNumber(node.getStartPosition()));
+    private Stmt visit(ConstructorInvocation node, Context context) {
+        Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
         _inform.addStatement(stmt);
+
+        Context contextParam = context.newStmtContext(stmt, VARIABLE_TYPE_USE);
         for (Object object : node.arguments())
-            process((ASTNode) object, stmt, null, VARIABLE_TYPE_USE);
+            process((ASTNode) object, contextParam);
         return null;
     }
 
@@ -63,13 +63,14 @@ public class TmpASTVisitor {
      *	    [ < Type { , Type } > ]
      *	    super ( [ Expression { , Expression } ] ) ;
      */
-    private VarNode visit(SuperConstructorInvocation node, Stmt stmt, Assign assign, int type) {
-        stmt = new Stmt(_inform, node, _unit.getLineNumber(node.getStartPosition()));
+    private Stmt visit(SuperConstructorInvocation node, Context context) {
+        Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
         _inform.addStatement(stmt);
-        if (node.getExpression() != null)
-            process(node.getExpression(), stmt, null, VARIABLE_TYPE_NONE);
+        //if (node.getExpression() != null)
+        //    process(node.getExpression(), context.newStmtContext(stmt, VARIABLE_TYPE_NONE));
+        Context contextParam = context.newStmtContext(stmt, VARIABLE_TYPE_USE);
         for (Object object : node.arguments())
-            process((ASTNode) object, stmt, null, VARIABLE_TYPE_USE);
+            process((ASTNode) object, contextParam);
         return null;
     }
 
@@ -77,11 +78,12 @@ public class TmpASTVisitor {
      * AssertStatement:
      *	assert Expression [ : Expression ] ;
      */
-    private VarNode visit(AssertStatement node, Stmt stmt, Assign assign, int type) {
-        stmt = new Stmt(_inform, node, _unit.getLineNumber(node.getStartPosition()));
+    private Stmt visit(AssertStatement node, Context context) {
+        Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
         _inform.addStatement(stmt);
-        process(node.getExpression(), stmt, null, VARIABLE_TYPE_NONE);
-        process(node.getMessage(), stmt, null, VARIABLE_TYPE_NONE);
+
+        //process(node.getExpression(), context.newStmtContext(stmt, VARIABLE_TYPE_NONE));
+        process(node.getMessage(), context.newStmtContext(stmt, VARIABLE_TYPE_USE));
         return null;
     }
 
@@ -89,8 +91,8 @@ public class TmpASTVisitor {
      * BreakStatement:
      *	break [ Identifier ] ;
      */
-    private VarNode visit(BreakStatement node, Stmt stmt, Assign assign, int type) {
-        stmt = new Stmt(_inform, node, _unit.getLineNumber(node.getStartPosition()));
+    private Stmt visit(BreakStatement node, Context context) {
+        Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
         _inform.addStatement(stmt);
         return null;
     }
@@ -99,8 +101,8 @@ public class TmpASTVisitor {
      * ContinueStatement:
      * continue [ Identifier ] ;
      */
-    private VarNode visit(ContinueStatement node, Stmt stmt, Assign assign, int type) {
-        stmt = new Stmt(_inform, node, _unit.getLineNumber(node.getStartPosition()));
+    private Stmt visit(ContinueStatement node, Context context) {
+        Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
         _inform.addStatement(stmt);
         return null;
     }
@@ -109,8 +111,8 @@ public class TmpASTVisitor {
      * EmptyStatement:
      *	;
      */
-    private VarNode visit(EmptyStatement node, Stmt stmt, Assign assign, int type) {
-        stmt = new Stmt(_inform, node, _unit.getLineNumber(node.getStartPosition()));
+    private Stmt visit(EmptyStatement node, Context context) {
+        Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
         _inform.addStatement(stmt);
         return null;
     }
@@ -119,10 +121,10 @@ public class TmpASTVisitor {
      * ExpressionStatement:
      * StatementExpression ;
      */
-    private VarNode visit(ExpressionStatement node, Stmt stmt, Assign assign, int type) {
-        stmt = new Stmt(_inform, node, _unit.getLineNumber(node.getStartPosition()));
+    private Stmt visit(ExpressionStatement node, Context context) {
+        Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
         _inform.addStatement(stmt);
-        process(node.getExpression(), stmt, null, VARIABLE_TYPE_USE);
+        process(node.getExpression(), context.newStmtContext(stmt, VARIABLE_TYPE_USE));
         return null;
     }
 
@@ -130,11 +132,9 @@ public class TmpASTVisitor {
      * LabeledStatement:
      *	Identifier : Statement
      */
-    private VarNode visit(LabeledStatement node, Stmt stmt, Assign assign, int type) {
-        stmt = new Stmt(_inform, node, _unit.getLineNumber(node.getStartPosition()));
-        _inform.addStatement(stmt);
+    private Stmt visit(LabeledStatement node, Context context) {
         if (node.getBody() != null)
-            process(node.getBody(), null, null, VARIABLE_TYPE_NONE);
+            process(node.getBody(), context);
         return null;
     }
 
@@ -142,11 +142,11 @@ public class TmpASTVisitor {
      * ReturnStatement:
      *	return [ Expression ] ;
      */
-    private VarNode visit(ReturnStatement node, Stmt stmt, Assign assign, int type) {
-        stmt = new Stmt(_inform, node, _unit.getLineNumber(node.getStartPosition()));
+    private Stmt visit(ReturnStatement node, Context context) {
+        Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
         _inform.addStatement(stmt);
         if (node.getExpression() != null)
-            process(node.getExpression(), stmt, null, VARIABLE_TYPE_USE);
+            process(node.getExpression(), context.newStmtContext(stmt, VARIABLE_TYPE_USE));
         return null;
     }
 
@@ -154,12 +154,12 @@ public class TmpASTVisitor {
      * SynchronizedStatement:
      *	synchronized ( Expression ) Block
      */
-    private VarNode visit(SynchronizedStatement node, Stmt stmt, Assign assign, int type) {
-        stmt = new Stmt(_inform, node, _unit.getLineNumber(node.getStartPosition()));
+    private Stmt visit(SynchronizedStatement node, Context context) {
+        Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
         _inform.addStatement(stmt);
         if (node.getExpression() != null)
-            process(node.getExpression(), stmt, null, VARIABLE_TYPE_USE);
-        process(node.getBody(), null, null, VARIABLE_TYPE_NONE);
+            process(node.getExpression(), context.newStmtContext(stmt, VARIABLE_TYPE_USE));
+        process(node.getBody(), context.newBranchContext(stmt));
         return null;
     }
 
@@ -168,8 +168,8 @@ public class TmpASTVisitor {
      *	TypeDeclaration
      *	EnumDeclaration
      */
-    private VarNode visit(TypeDeclarationStatement node, Stmt stmt, Assign assign, int type) {
-        stmt = new Stmt(_inform, node, _unit.getLineNumber(node.getStartPosition()));
+    private Stmt visit(TypeDeclarationStatement node, Context context) {
+        Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
         _inform.addStatement(stmt);
         return null;
     }
@@ -178,11 +178,13 @@ public class TmpASTVisitor {
      * VariableDeclarationStatement: { ExtendedModifier } Type
      * VariableDeclarationFragment { , VariableDeclarationFragment } ;
      */
-    private VarNode visit(VariableDeclarationStatement node, Stmt stmt, Assign assign, int type) {
-        stmt = new Stmt(_inform, node, _unit.getLineNumber(node.getStartPosition()));
+    private Stmt visit(VariableDeclarationStatement node, Context context) {
+        Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
         _inform.addStatement(stmt);
+
+        Context contextParam = context.newStmtContext(stmt, VARIABLE_TYPE_DEF);
         for (Object object : node.fragments())
-            process((ASTNode) object, stmt, null, VARIABLE_TYPE_DEF);
+            process((ASTNode) object, contextParam);
         return null;
     }
 
@@ -191,13 +193,15 @@ public class TmpASTVisitor {
      * IfStatement:
      *	if ( Expression ) Statement [ else Statement]
      */
-    private VarNode visit(IfStatement node, Stmt stmt, Assign assign, int type) {
-        stmt = new Stmt(_inform, node, _unit.getLineNumber(node.getStartPosition()));
+    private Stmt visit(IfStatement node, Context context) {
+        Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
         _inform.addStatement(stmt);
-        process(node.getExpression(), stmt, null, VARIABLE_TYPE_USE);
-        process(node.getThenStatement(), null, null, VARIABLE_TYPE_NONE);
+
+        process(node.getExpression(), context.newConditionContext(stmt));
+        Context contextBranch = context.newBranchContext(stmt);
+        process(node.getThenStatement(), contextBranch);
         if (node.getElseStatement() != null)
-            process(node.getElseStatement(), null, null, VARIABLE_TYPE_NONE);
+            process(node.getElseStatement(), contextBranch);
         return null;
     }
 
@@ -206,12 +210,13 @@ public class TmpASTVisitor {
      *           case Expression  :
      *           default :
      */
-    private VarNode visit(SwitchCase node, Stmt stmt, Assign assign, int type) {
-        stmt = new Stmt(_inform, node, _unit.getLineNumber(node.getStartPosition()));
+    private Stmt visit(SwitchCase node, Context context) {
+        Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
         _inform.addStatement(stmt);
+
         if (node.getExpression() != null)
-            process(node.getExpression(), stmt, null, VARIABLE_TYPE_USE);
-        return null;
+            process(node.getExpression(), context.newStmtContext(stmt, VARIABLE_TYPE_USE));
+        return stmt;
     }
 
     /**
@@ -222,12 +227,18 @@ public class TmpASTVisitor {
      *           case Expression  :
      *           default :
      */
-    private VarNode visit(SwitchStatement node, Stmt stmt, Assign assign, int type) {
-        stmt = new Stmt(_inform, node, _unit.getLineNumber(node.getStartPosition()));
+    private Stmt visit(SwitchStatement node, Context context) {
+        Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
         _inform.addStatement(stmt);
-        process(node.getExpression(), stmt, null, VARIABLE_TYPE_USE);
+        
+        process(node.getExpression(), context.newStmtContext(stmt, VARIABLE_TYPE_USE));
+
+        Context contextBranch = context.newBranchContext(stmt);
         for (Object object : node.statements())
-            process((ASTNode) object, null, null, VARIABLE_TYPE_NONE);
+            if (object instanceof SwitchCase)
+                contextBranch = context.newBranchContext(process((ASTNode) object, contextBranch));
+            else
+                process((ASTNode) object, contextBranch);
         return null;
     }
 
@@ -237,12 +248,16 @@ public class TmpASTVisitor {
      * for ( FormalParameter : Expression )
      * Statement
      */
-    private VarNode visit(EnhancedForStatement node, Stmt stmt, Assign assign, int type) {
-        stmt = new Stmt(_inform, node, _unit.getLineNumber(node.getStartPosition()));
+    private Stmt visit(EnhancedForStatement node, Context context) {
+        Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
         _inform.addStatement(stmt);
-        process(node.getParameter(), stmt, null, VARIABLE_TYPE_USE);
-        process(node.getExpression(), stmt, null, VARIABLE_TYPE_USE);
-        process(node.getBody(), null, null, VARIABLE_TYPE_NONE);
+
+        Assign assign = new Assign(context.getStmt(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
+        Context contextExpr = context.newStmtContext(stmt, VARIABLE_TYPE_USE);
+
+        process(node.getParameter(), contextExpr.newAssignContext(assign, VARIABLE_TYPE_DEF));
+        process(node.getExpression(), contextExpr.newAssignContext(assign, VARIABLE_TYPE_USE));
+        process(node.getBody(), context.newBranchContext(stmt));
         return null;
     }
 
@@ -257,18 +272,26 @@ public class TmpASTVisitor {
      * ForUpdate:
      *      Expression { , Expression }
      */
-    private VarNode visit(ForStatement node, Stmt stmt, Assign assign, int type) {
-        stmt = new Stmt(_inform, node, _unit.getLineNumber(node.getStartPosition()));
+    private Stmt visit(ForStatement node, Context context) {
+        Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
         _inform.addStatement(stmt);
-        if (!node.initializers().isEmpty())
+
+        if (!node.initializers().isEmpty()) {
+            Context contextInit = context.newStmtContext(stmt, VARIABLE_TYPE_USE);
             for (Object object : node.initializers())
-                process((ASTNode) object, stmt, null, VARIABLE_TYPE_USE);
+                process((ASTNode) object, contextInit);
+        }
+
         if (node.getExpression() != null)
-            process(node.getExpression(), stmt, null, VARIABLE_TYPE_USE);
-        if (!node.updaters().isEmpty())
+            process(node.getExpression(), context.newConditionContext(stmt));
+
+        if (!node.updaters().isEmpty()) {
+            Context contextUpdate = context.newStmtContext(stmt, VARIABLE_TYPE_USE);
             for (Object object : node.updaters())
-                process((ASTNode) object, stmt, null, VARIABLE_TYPE_USE);
-        process(node.getBody(), null, null, VARIABLE_TYPE_NONE);
+                process((ASTNode) object, contextUpdate);
+        }
+
+        process(node.getBody(), context.newBranchContext(stmt));
         return null;
     }
 
@@ -276,11 +299,12 @@ public class TmpASTVisitor {
      * DoStatement:
      *	do Statement while ( Expression ) ;
      */
-    private VarNode visit(DoStatement node, Stmt stmt, Assign assign, int type) {
-        stmt = new Stmt(_inform, node, _unit.getLineNumber(node.getStartPosition()));
+    private Stmt visit(DoStatement node, Context context) {
+        Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
         _inform.addStatement(stmt);
-        process(node.getExpression(), stmt, null, VARIABLE_TYPE_USE);
-        process(node.getBody(), null, null, VARIABLE_TYPE_NONE);
+
+        process(node.getExpression(), context.newConditionContext(stmt));
+        process(node.getBody(), context.newBranchContext(stmt));
         return null;
     }
 
@@ -288,11 +312,12 @@ public class TmpASTVisitor {
      * WhileStatement:
      *	while ( Expression ) Statement
      */
-    private VarNode visit(WhileStatement node, Stmt stmt, Assign assign, int type) {
-        stmt = new Stmt(_inform, node, _unit.getLineNumber(node.getStartPosition()));
+    private Stmt visit(WhileStatement node, Context context) {
+        Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
         _inform.addStatement(stmt);
-        process(node.getExpression(), stmt, null, VARIABLE_TYPE_USE);
-        process(node.getBody(), null, null, VARIABLE_TYPE_NONE);
+
+        process(node.getExpression(), context.newConditionContext(stmt));
+        process(node.getBody(), context.newBranchContext(stmt));
         return null;
     }
 
@@ -304,21 +329,26 @@ public class TmpASTVisitor {
      *	    [ { CatchClause } ]
      *	    [ finally Block ]
      */
-    private VarNode visit(TryStatement node, Stmt stmt, Assign assign, int type) {
-        stmt = new Stmt(_inform, node, _unit.getLineNumber(node.getStartPosition()));
+    private Stmt visit(TryStatement node, Context context) {
+        Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
         _inform.addStatement(stmt);
+
+        Context contextStmt = context.newStmtContext(stmt, VARIABLE_TYPE_USE);
         if (node.resources() != null)
             for (Object object : node.resources())
-                process((ASTNode) object, stmt, null, VARIABLE_TYPE_USE);
-        process(node.getBody(), null, null, VARIABLE_TYPE_NONE);
+                process((ASTNode) object, contextStmt);
+
+        Context contextBranch = context.newBranchContext(stmt);
+
+        process(node.getBody(), contextBranch);
 
         for (Object object : node.catchClauses()) {
             CatchClause catchClause = (CatchClause) object;
-            process(catchClause, null, null, VARIABLE_TYPE_NONE);
+            process(catchClause, contextBranch);
         }
 
         if (node.getFinally() != null)
-            process(node.getFinally(), null, null, VARIABLE_TYPE_NONE);
+            process(node.getFinally(), contextBranch);
         return null;
     }
 
@@ -326,11 +356,12 @@ public class TmpASTVisitor {
      * CatchClause
      *    catch ( SingleVariableDeclaration ) Block
      */
-    private VarNode visit(CatchClause node, Stmt stmt, Assign assign, int type) {
-        stmt = new Stmt(_inform, node, _unit.getLineNumber(node.getStartPosition()));
+    private Stmt visit(CatchClause node, Context context) {
+        Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
         _inform.addStatement(stmt);
-        process(node.getException(), stmt, null, VARIABLE_TYPE_DEF);
-        process(node.getBody(), null, null, VARIABLE_TYPE_NONE);
+
+        process(node.getException(), context.newStmtContext(stmt, VARIABLE_TYPE_DEF));
+        process(node.getBody(), context.newBranchContext(stmt));
         return null;
     }
 
@@ -338,21 +369,30 @@ public class TmpASTVisitor {
      * ThrowStatement:
      *	throw Expression ;
      */
-    private VarNode visit(ThrowStatement node, Stmt stmt, Assign assign, int type) {
-        stmt = new Stmt(_inform, node, _unit.getLineNumber(node.getStartPosition()));
+    private Stmt visit(ThrowStatement node, Context context) {
+        Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
         _inform.addStatement(stmt);
-        process(node.getExpression(), stmt, null, VARIABLE_TYPE_USE);
+
+        process(node.getExpression(), context.newStmtContext(stmt, VARIABLE_TYPE_USE));
         return null;
     }
 
     /************************** Visit Expression ******************************/
+
+    private Context checkCondition(ASTNode node, Context context) {
+        if (!context.checkControl()) return context;
+        ControlExpression control = new ControlExpression(_unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
+        context.getStmt().addControlExpr(control);
+        return context.newControlContext(control);
+    }
+
     /**
      * Annotation:
      * NormalAnnotation
      * MarkerAnnotation
      * SingleMemberAnnotation
      */
-    private VarNode visit(Annotation node, Stmt stmt, Assign assign, int type) {
+    private Stmt visit(Annotation node, Context context) {
         return null;
     }
 
@@ -360,13 +400,14 @@ public class TmpASTVisitor {
      * ArrayAccess:
      * Expression [ Expression ]
      */
-    private VarNode visit(ArrayAccess node, Stmt stmt, Assign assign, int type) {
-        if (type == VARIABLE_TYPE_DEF) {
-            process(node.getArray(), stmt, assign, VARIABLE_TYPE_DEF);
-            process(node.getIndex(), stmt, assign, VARIABLE_TYPE_USE);
+    private Stmt visit(ArrayAccess node, Context context) {
+        context = checkCondition(node, context);
+        if (context.getType() == VARIABLE_TYPE_DEF) {
+            process(node.getArray(), context);
+            process(node.getIndex(), context.newExprContext());
         } else {
-            process(node.getArray(), stmt, assign, type);
-            process(node.getIndex(), stmt, assign, type);
+            process(node.getArray(), context);
+            process(node.getIndex(), context);
         }
         return null;
     }
@@ -377,11 +418,11 @@ public class TmpASTVisitor {
      * { [ ] } new PrimitiveType [ ] { [ ] } ArrayInitializer new TypeName [ <
      * Type { , Type } > ] [ ] { [ ] } ArrayInitializer
      */
-    private VarNode visit(ArrayCreation node, Stmt stmt, Assign assign, int type) {
+    private Stmt visit(ArrayCreation node, Context context) {
         for (Object object : node.dimensions())
-            process((ASTNode) object, stmt, assign, type);
+            process((ASTNode) object, context);
         if (node.getInitializer() != null)
-            process(node.getInitializer(), stmt, assign, type);
+            process(node.getInitializer(), context);
         return null;
     }
 
@@ -389,9 +430,9 @@ public class TmpASTVisitor {
      * ArrayInitializer:
      *      { [ Expression { , Expression} [ , ]] }
      */
-    private VarNode visit(ArrayInitializer node, Stmt stmt, Assign assign, int type) {
+    private Stmt visit(ArrayInitializer node, Context context) {
         for (Object object : node.expressions())
-            process((ASTNode) object, stmt, assign, type);
+            process((ASTNode) object, context);
         return null;
     }
 
@@ -399,8 +440,9 @@ public class TmpASTVisitor {
      * CastExpression:
      * ( Type ) Expression
      */
-    private VarNode visit(CastExpression node, Stmt stmt, Assign assign, int type) {
-        process(node.getExpression(), stmt, assign, type);
+    private Stmt visit(CastExpression node, Context context) {
+        context = checkCondition(node, context);
+        process(node.getExpression(), context);
         return null;
     }
 
@@ -408,17 +450,17 @@ public class TmpASTVisitor {
      * ClassInstanceCreation: [ Expression . ] new [ < Type { , Type } > ] Type
      * ( [ Expression { , Expression } ] ) [ AnonymousClassDeclaration ]
      */
-    private VarNode visit(ClassInstanceCreation node, Stmt stmt, Assign assign, int type) {
-        if (node.getExpression() != null)
-            process(node.getExpression(), stmt, assign, VARIABLE_TYPE_NONE);
-        if (node.getAnonymousClassDeclaration() != null)
-            process(node.getAnonymousClassDeclaration(), stmt, assign, VARIABLE_TYPE_NONE);
+    private Stmt visit(ClassInstanceCreation node, Context context) {
+        //if (node.getExpression() != null)
+        //    process(node.getExpression(), context);
+        //if (node.getAnonymousClassDeclaration() != null)
+        //    process(node.getAnonymousClassDeclaration(), context);
         for (Object object : node.arguments())
-            process((ASTNode) object, stmt, assign, VARIABLE_TYPE_USE);
+            process((ASTNode) object, context.newExprContext());
         return null;
     }
 
-    private VarNode visit(AnonymousClassDeclaration node, Stmt stmt, Assign assign, int type) {
+    private Stmt visit(AnonymousClassDeclaration node, Context context) {
         return null;
     }
 
@@ -426,10 +468,11 @@ public class TmpASTVisitor {
      * ConditionalExpression:
      *      Expression ? Expression : Expression
      */
-    private VarNode visit(ConditionalExpression node, Stmt stmt, Assign assign, int type) {
-        process(node.getExpression(), stmt, assign, type);
-        process(node.getThenExpression(), stmt, assign, type);
-        process(node.getElseExpression(), stmt, assign, type);
+    private Stmt visit(ConditionalExpression node, Context context) {
+        context = checkCondition(node, context);
+        process(node.getExpression(), context);
+        process(node.getThenExpression(), context);
+        process(node.getElseExpression(), context);
         return null;
     }
 
@@ -437,12 +480,16 @@ public class TmpASTVisitor {
      * InfixExpression:
      *		Expression InfixOperator Expression { InfixOperator Expression }
      */
-    private VarNode visit(InfixExpression node, Stmt stmt, Assign assign, int type) {
-        process(node.getLeftOperand(), stmt, assign, type);
-        process(node.getRightOperand(), stmt, assign, type);
+    private Stmt visit(InfixExpression node, Context context) {
+        if ((node.getOperator() != InfixExpression.Operator.CONDITIONAL_AND) &&
+            (node.getOperator() != InfixExpression.Operator.CONDITIONAL_OR))
+            context = checkCondition(node, context);
+
+        process(node.getLeftOperand(), context);
+        process(node.getRightOperand(), context);
         if (node.hasExtendedOperands())
             for (Object object : node.extendedOperands())
-                process((Expression) object, stmt, assign, type);
+                process((Expression) object, context);
         return null;
     }
 
@@ -450,9 +497,10 @@ public class TmpASTVisitor {
      * InstanceofExpression:
      *		Expression instanceof Type
      */
-    private VarNode visit(InstanceofExpression node, Stmt stmt, Assign assign, int type) {
-        process(node.getLeftOperand(), stmt, assign, type);
-        process(node.getRightOperand(), stmt, assign, VARIABLE_TYPE_NONE);
+    private Stmt visit(InstanceofExpression node, Context context) {
+        context = checkCondition(node, context);
+        process(node.getLeftOperand(), context);
+        //process(node.getRightOperand(), context.newExprContext(VARIABLE_TYPE_NONE));
         return null;
     }
 
@@ -462,7 +510,7 @@ public class TmpASTVisitor {
      *	( [ Identifier { , Identifier } ] ) -> Body
      *	( [ FormalParameter { , FormalParameter } ] ) -> Body
      */
-    private VarNode visit(LambdaExpression node, Stmt stmt, Assign assign, int type) {
+    private Stmt visit(LambdaExpression node, Context context) {
         return null;
     }
 
@@ -472,11 +520,12 @@ public class TmpASTVisitor {
      *    [ < Type { , Type } > ]
      *    Identifier ( [ Expression { , Expression } ] )
      */
-    private VarNode visit(MethodInvocation node, Stmt stmt, Assign assign, int type) {
-        process(node.getExpression(), stmt, assign, type);
-        process(node.getName(), stmt, assign, VARIABLE_TYPE_NONE);
+    private Stmt visit(MethodInvocation node, Context context) {
+        context = checkCondition(node, context);
+        process(node.getExpression(), context);
+        //process(node.getName(), context.newExprContext(VARIABLE_TYPE_NONE));
         for (Object object : node.arguments())
-            process((ASTNode) object, stmt, assign, type);
+            process((ASTNode) object, context);
         return null;
     }
 
@@ -484,8 +533,8 @@ public class TmpASTVisitor {
      * ParenthesizedExpression:
      *	( Expression )
      */
-    private VarNode visit(ParenthesizedExpression node, Stmt stmt, Assign assign, int type) {
-        process(node.getExpression(), stmt, assign, type);
+    private Stmt visit(ParenthesizedExpression node, Context context) {
+        process(node.getExpression(), context);
         return null;
     }
 
@@ -493,8 +542,9 @@ public class TmpASTVisitor {
      * PostfixExpression:
      *	Expression PostfixOperator
      */
-    private VarNode visit(PostfixExpression node, Stmt stmt, Assign assign, int type) {
-        process(node.getOperand(), stmt, assign, type);
+    private Stmt visit(PostfixExpression node, Context context) {
+        context = checkCondition(node, context);
+        process(node.getOperand(), context);
         return null;
     }
 
@@ -502,8 +552,9 @@ public class TmpASTVisitor {
      * PrefixExpression:
      *	PrefixOperator Expression
      */
-    private VarNode visit(PrefixExpression node, Stmt stmt, Assign assign, int type) {
-        process(node.getOperand(), stmt, assign, type);
+    private Stmt visit(PrefixExpression node, Context context) {
+        context = checkCondition(node, context);
+        process(node.getOperand(), context);
         return null;
     }
 
@@ -513,12 +564,13 @@ public class TmpASTVisitor {
      *    [ < Type { , Type } > ]
      *    Identifier ( [ Expression { , Expression } ] )
      */
-    private VarNode visit(SuperMethodInvocation node, Stmt stmt, Assign assign, int type) {
-        process(node.getName(), stmt, assign, VARIABLE_TYPE_NONE);
-        if (node.getQualifier() != null)
-            process(node.getQualifier(), stmt, assign, VARIABLE_TYPE_NONE);
+    private Stmt visit(SuperMethodInvocation node, Context context) {
+        context = checkCondition(node, context);
+        //process(node.getName(), context.newExprContext(VARIABLE_TYPE_NONE));
+        //if (node.getQualifier() != null)
+        //    process(node.getQualifier(), context.newExprContext(VARIABLE_TYPE_NONE));
         for (Object object : node.arguments())
-            process((ASTNode) object, stmt, assign, type);
+            process((ASTNode) object, context);
         return null;
     }
 
@@ -526,13 +578,15 @@ public class TmpASTVisitor {
      * Assignment:
      *      Expression AssignmentOperator Expression
      */
-    private VarNode visit(Assignment node, Stmt stmt, Assign assign, int type) {
-        Assign assign1 = new Assign(stmt, _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
-        process(node.getLeftHandSide(), stmt, assign1, VARIABLE_TYPE_DEF);
-        process(node.getRightHandSide(), stmt, assign1, VARIABLE_TYPE_USE);
+    private Stmt visit(Assignment node, Context context) {
+        context = checkCondition(node, context);
+        Assign assign = new Assign(context.getStmt(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
 
-        if ((assign != null) && (type == VARIABLE_TYPE_USE))
-            assign.addUse(assign1.getDef());
+        process(node.getLeftHandSide(), context.newAssignContext(assign, VARIABLE_TYPE_DEF));
+        process(node.getRightHandSide(), context.newAssignContext(assign, VARIABLE_TYPE_USE));
+
+        if ((context.getAssign() != null) && (context.getType() == VARIABLE_TYPE_USE))
+            context.getAssign().addUse(assign.getDef());
         return null;
     }
 
@@ -541,11 +595,11 @@ public class TmpASTVisitor {
      * { ExtendedModifier } Type {Annotation} [ ... ] Identifier { Dimension } [ = Expression ]
      * "..." should not be appear since it is only used in method declarations
      */
-    private VarNode visit(SingleVariableDeclaration node, Stmt stmt, Assign assign, int type) {
-        assign = new Assign(stmt, _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
-        process(node.getName(), stmt, assign, VARIABLE_TYPE_DEF);
+    private Stmt visit(SingleVariableDeclaration node, Context context) {
+        Assign assign = new Assign(context.getStmt(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
+        process(node.getName(), context.newAssignContext(assign, VARIABLE_TYPE_DEF));
         if (node.getInitializer() != null)
-            process(node.getInitializer(), stmt, assign, VARIABLE_TYPE_USE);
+            process(node.getInitializer(), context.newAssignContext(assign, VARIABLE_TYPE_USE));
         return null;
     }
 
@@ -554,9 +608,9 @@ public class TmpASTVisitor {
      *	{ ExtendedModifier } Type VariableDeclarationFragment
      *	    { , VariableDeclarationFragment }
      */
-    private VarNode visit(VariableDeclarationExpression node, Stmt stmt, Assign assign, int type) {
+    private Stmt visit(VariableDeclarationExpression node, Context context) {
         for (Object object : node.fragments())
-            process((ASTNode) object, stmt, assign, type);
+            process((ASTNode) object, context);
         return null;
     }
 
@@ -564,11 +618,11 @@ public class TmpASTVisitor {
      * VariableDeclarationFragment:
      *	Identifier { Dimension } [ = Expression ]
      */
-    private VarNode visit(VariableDeclarationFragment node, Stmt stmt, Assign assign, int type) {
-        assign = new Assign(stmt, _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
-        process(node.getName(), stmt, assign, VARIABLE_TYPE_DEF);
+    private Stmt visit(VariableDeclarationFragment node, Context context) {
+        Assign assign = new Assign(context.getStmt(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
+        process(node.getName(), context.newAssignContext(assign, VARIABLE_TYPE_DEF));
         if (node.getInitializer() != null)
-            process(node.getInitializer(), stmt, assign, VARIABLE_TYPE_USE);
+            process(node.getInitializer(), context.newAssignContext(assign, VARIABLE_TYPE_USE));
         return null;
     }
 
@@ -577,18 +631,23 @@ public class TmpASTVisitor {
      * FieldAccess:
      *           Expression . Identifier
      */
-    private VarNode visit(FieldAccess node, Stmt stmt, Assign assign, int type) {
+    private Stmt visit(FieldAccess node, Context context) {
         String varID = node.toString();
-        if (type == VARIABLE_TYPE_NONE)
-            return null;
-
-        VarNode var = _inform.addVar(varID);
-        if (type == VARIABLE_TYPE_DEF)
-            assign.setDef(var);
-        else if (type == VARIABLE_TYPE_USE) {
-            stmt.addUse(var);
-            if (assign != null)
-                assign.addUse(var);
+        VarNode var;
+        switch (context.getType()){
+            case VARIABLE_TYPE_DEF:
+                var = _inform.addVar(varID);
+                context.getAssign().setDef(var);
+                break;
+            case VARIABLE_TYPE_USE:
+                var = _inform.addVar(varID);
+                context.getStmt().addUse(var);
+                if (context.getAssign() != null)
+                    context.getAssign().addUse(var);
+                if (context.getControlExpr() != null)
+                    context.getControlExpr().addUse(var);
+                break;
+            default:
         }
         return null;
     }
@@ -598,18 +657,23 @@ public class TmpASTVisitor {
      *	SimpleName
      *	QualifiedName
      */
-    private VarNode visit(Name node, Stmt stmt, Assign assign, int type) {
+    private Stmt visit(Name node, Context context) {
         String varID = node.toString();
-        if (type == VARIABLE_TYPE_NONE)
-            return null;
-
-        VarNode var = _inform.addVar(varID);
-        if (type == VARIABLE_TYPE_DEF)
-            assign.setDef(var);
-        else if (type == VARIABLE_TYPE_USE) {
-            stmt.addUse(var);
-            if (assign != null)
-                assign.addUse(var);
+        VarNode var;
+        switch (context.getType()){
+            case VARIABLE_TYPE_DEF:
+                var = _inform.addVar(varID);
+                context.getAssign().setDef(var);
+                break;
+            case VARIABLE_TYPE_USE:
+                var = _inform.addVar(varID);
+                context.getStmt().addUse(var);
+                if (context.getAssign() != null)
+                    context.getAssign().addUse(var);
+                if (context.getControlExpr() != null)
+                    context.getControlExpr().addUse(var);
+                break;
+            default:
         }
         return null;
     }
@@ -618,18 +682,23 @@ public class TmpASTVisitor {
      * SuperFieldAccess:
      *	[ ClassName . ] super . Identifier
      */
-    private VarNode visit(SuperFieldAccess node, Stmt stmt, Assign assign, int type) {
+    private Stmt visit(SuperFieldAccess node, Context context) {
         String varID = node.toString();
-        if (type == VARIABLE_TYPE_NONE)
-            return null;
-
-        VarNode var = _inform.addVar(varID);
-        if (type == VARIABLE_TYPE_DEF)
-            assign.setDef(var);
-        else if (type == VARIABLE_TYPE_USE) {
-            stmt.addUse(var);
-            if (assign != null)
-                assign.addUse(var);
+        VarNode var;
+        switch (context.getType()){
+            case VARIABLE_TYPE_DEF:
+                var = _inform.addVar(varID);
+                context.getAssign().setDef(var);
+                break;
+            case VARIABLE_TYPE_USE:
+                var = _inform.addVar(varID);
+                context.getStmt().addUse(var);
+                if (context.getAssign() != null)
+                    context.getAssign().addUse(var);
+                if (context.getControlExpr() != null)
+                    context.getControlExpr().addUse(var);
+                break;
+            default:
         }
         return null;
     }
@@ -639,35 +708,35 @@ public class TmpASTVisitor {
      * BooleanLiteral:
      *      true false
      */
-    private VarNode visit(BooleanLiteral node, Stmt stmt, Assign assign, int type) {
+    private Stmt visit(BooleanLiteral node, Context context) {
         return null;
     }
 
     /**
      * Character literal nodes.
      */
-    private VarNode visit(CharacterLiteral node, Stmt stmt, Assign assign, int type) {
+    private Stmt visit(CharacterLiteral node, Context context) {
         return null;
     }
 
     /**
      * Null literal node.
      */
-    private VarNode visit(NullLiteral node, Stmt stmt, Assign assign, int type) {
+    private Stmt visit(NullLiteral node, Context context) {
         return null;
     }
 
     /**
      * Number literal node.
      */
-    private VarNode visit(NumberLiteral node, Stmt stmt, Assign assign, int type) {
+    private Stmt visit(NumberLiteral node, Context context) {
         return null;
     }
 
     /**
      * String literal nodes.
      */
-    private VarNode visit(StringLiteral node, Stmt stmt, Assign assign, int type) {
+    private Stmt visit(StringLiteral node, Context context) {
         return null;
     }
 
@@ -675,7 +744,7 @@ public class TmpASTVisitor {
      * TypeLiteral:
      *	( Type | void ) . class
      */
-    private VarNode visit(TypeLiteral node, Stmt stmt, Assign assign, int type) {
+    private Stmt visit(TypeLiteral node, Context context) {
         return null;
     }
 
@@ -683,7 +752,7 @@ public class TmpASTVisitor {
      * ThisExpression:
      *	[ ClassName . ] this
      */
-    private VarNode visit(ThisExpression node, Stmt stmt, Assign assign, int type) {
+    private Stmt visit(ThisExpression node, Context context) {
         return null;
     }
 
@@ -694,7 +763,7 @@ public class TmpASTVisitor {
      *          [ < Type { , Type } > ]
      *      new
      */
-    private VarNode visit(CreationReference node, Stmt stmt, Assign assign, int type) {
+    private Stmt visit(CreationReference node, Context context) {
         return null;
     }
 
@@ -704,7 +773,7 @@ public class TmpASTVisitor {
      *	    [ < Type { , Type } > ]
      *	    Identifier
      */
-    private VarNode visit(ExpressionMethodReference node, Stmt stmt, Assign assign, int type) {
+    private Stmt visit(ExpressionMethodReference node, Context context) {
         return null;
     }
 
@@ -715,7 +784,7 @@ public class TmpASTVisitor {
      *	SuperMethodReference
      *	TypeMethodReference
      */
-    private VarNode visit(MethodReference node, Stmt stmt, Assign assign, int type) {
+    private Stmt visit(MethodReference node, Context context) {
         return null;
     }
 
@@ -725,7 +794,7 @@ public class TmpASTVisitor {
      *	    [ < Type { , Type } > ]
      *	    Identifier
      */
-    private VarNode visit(SuperMethodReference node, Stmt stmt, Assign assign, int type) {
+    private Stmt visit(SuperMethodReference node, Context context) {
         return null;
     }
 
@@ -735,7 +804,7 @@ public class TmpASTVisitor {
      *	    [ < Type { , Type } > ]
      *	    Identifier
      */
-    private VarNode visit(TypeMethodReference node, Stmt stmt, Assign assign, int type) {
+    private Stmt visit(TypeMethodReference node, Context context) {
         return null;
     }
 
@@ -743,159 +812,140 @@ public class TmpASTVisitor {
     /************************** Process ******************************/
     TmpASTVisitor(CompilationUnit unit, String file) {
         _unit = unit;
-        _file = file;
     }
 
-    VarNode process(ASTNode node) {
+    SourceInform process(ASTNode node) {
         _inform = new SourceInform();
-        process(node, null, null, VARIABLE_TYPE_NONE);
-        _inform.buildEntryList();
-        _inform.buildReturnList();
-        return null;
+        process(node, new Context());
+        return _inform;
     }
 
-    private VarNode process(ASTNode node, Stmt stmt, Assign assign, int type) {
+    private Stmt process(ASTNode node, Context context) {
         if (node == null) {
             return null;
         }
         if (node instanceof AssertStatement) {
-            return visit((AssertStatement) node, stmt, assign, type);
+            return visit((AssertStatement) node, context);
         } else if (node instanceof Block) {
-            return visit((Block) node, stmt, assign, type);
+            return visit((Block) node, context);
         } else if (node instanceof BreakStatement) {
-            return visit((BreakStatement) node, stmt, assign, type);
+            return visit((BreakStatement) node, context);
         } else if (node instanceof ConstructorInvocation) {
-            return visit((ConstructorInvocation) node, stmt, assign, type);
+            return visit((ConstructorInvocation) node, context);
         } else if (node instanceof ContinueStatement) {
-            return visit((ContinueStatement) node, stmt, assign, type);
+            return visit((ContinueStatement) node, context);
         } else if (node instanceof DoStatement) {
-            return visit((DoStatement) node, stmt, assign, type);
+            return visit((DoStatement) node, context);
         } else if (node instanceof EmptyStatement) {
-            return visit((EmptyStatement) node, stmt, assign, type);
+            return visit((EmptyStatement) node, context);
         } else if (node instanceof EnhancedForStatement) {
-            return visit((EnhancedForStatement) node, stmt, assign, type);
+            return visit((EnhancedForStatement) node, context);
         } else if (node instanceof ExpressionStatement) {
-            return visit((ExpressionStatement) node, stmt, assign, type);
+            return visit((ExpressionStatement) node, context);
         } else if (node instanceof ForStatement) {
-            return visit((ForStatement) node, stmt, assign, type);
+            return visit((ForStatement) node, context);
         } else if (node instanceof IfStatement) {
-            return visit((IfStatement) node, stmt, assign, type);
+            return visit((IfStatement) node, context);
         } else if (node instanceof LabeledStatement) {
-            return visit((LabeledStatement) node, stmt, assign, type);
+            return visit((LabeledStatement) node, context);
         } else if (node instanceof ReturnStatement) {
-            return visit((ReturnStatement) node, stmt, assign, type);
+            return visit((ReturnStatement) node, context);
         } else if (node instanceof SuperConstructorInvocation) {
-            return visit((SuperConstructorInvocation) node, stmt, assign, type);
+            return visit((SuperConstructorInvocation) node, context);
         } else if (node instanceof SwitchCase) {
-            return visit((SwitchCase) node, stmt, assign, type);
+            return visit((SwitchCase) node, context);
         } else if (node instanceof SwitchStatement) {
-            return visit((SwitchStatement) node, stmt, assign, type);
+            return visit((SwitchStatement) node, context);
         } else if (node instanceof SynchronizedStatement) {
-            return visit((SynchronizedStatement) node, stmt, assign, type);
+            return visit((SynchronizedStatement) node, context);
         } else if (node instanceof ThrowStatement) {
-            return visit((ThrowStatement) node, stmt, assign, type);
+            return visit((ThrowStatement) node, context);
         } else if (node instanceof TryStatement) {
-            return visit((TryStatement) node, stmt, assign, type);
+            return visit((TryStatement) node, context);
         } else if (node instanceof TypeDeclarationStatement) {
-            return visit((TypeDeclarationStatement) node, stmt, assign, type);
+            return visit((TypeDeclarationStatement) node, context);
         } else if (node instanceof VariableDeclarationStatement) {
-            return visit((VariableDeclarationStatement) node, stmt, assign, type);
+            return visit((VariableDeclarationStatement) node, context);
         } else if (node instanceof WhileStatement) {
-            return visit((WhileStatement) node, stmt, assign, type);
+            return visit((WhileStatement) node, context);
         } else if (node instanceof Annotation) {
-            return visit((Annotation) node, stmt, assign, type);
+            return visit((Annotation) node, context);
         } else if (node instanceof ArrayAccess) {
-            return visit((ArrayAccess) node, stmt, assign, type);
+            return visit((ArrayAccess) node, context);
         } else if (node instanceof ArrayCreation) {
-            return visit((ArrayCreation) node, stmt, assign, type);
+            return visit((ArrayCreation) node, context);
         } else if (node instanceof ArrayInitializer) {
-            return visit((ArrayInitializer) node, stmt, assign, type);
+            return visit((ArrayInitializer) node, context);
         } else if (node instanceof Assignment) {
-            return visit((Assignment) node, stmt, assign, type);
+            return visit((Assignment) node, context);
         } else if (node instanceof BooleanLiteral) {
-            return visit((BooleanLiteral) node, stmt, assign, type);
+            return visit((BooleanLiteral) node, context);
         } else if (node instanceof CastExpression) {
-            return visit((CastExpression) node, stmt, assign, type);
+            return visit((CastExpression) node, context);
         } else if (node instanceof CharacterLiteral) {
-            return visit((CharacterLiteral) node, stmt, assign, type);
+            return visit((CharacterLiteral) node, context);
         } else if (node instanceof ClassInstanceCreation) {
-            return visit((ClassInstanceCreation) node, stmt, assign, type);
+            return visit((ClassInstanceCreation) node, context);
         } else if (node instanceof ConditionalExpression) {
-            return visit((ConditionalExpression) node, stmt, assign, type);
+            return visit((ConditionalExpression) node, context);
         } else if (node instanceof CreationReference) {
-            return visit((CreationReference) node, stmt, assign, type);
+            return visit((CreationReference) node, context);
         } else if (node instanceof ExpressionMethodReference) {
-            return visit((ExpressionMethodReference) node, stmt, assign, type);
+            return visit((ExpressionMethodReference) node, context);
         } else if (node instanceof FieldAccess) {
-            return visit((FieldAccess) node, stmt, assign, type);
+            return visit((FieldAccess) node, context);
         } else if (node instanceof InfixExpression) {
-            return visit((InfixExpression) node, stmt, assign, type);
+            return visit((InfixExpression) node, context);
         } else if (node instanceof InstanceofExpression) {
-            return visit((InstanceofExpression) node, stmt, assign, type);
+            return visit((InstanceofExpression) node, context);
         } else if (node instanceof LambdaExpression) {
-            return visit((LambdaExpression) node, stmt, assign, type);
+            return visit((LambdaExpression) node, context);
         } else if (node instanceof MethodInvocation) {
-            return visit((MethodInvocation) node, stmt, assign, type);
+            return visit((MethodInvocation) node, context);
         } else if (node instanceof MethodReference) {
-            return visit((MethodReference) node, stmt, assign, type);
+            return visit((MethodReference) node, context);
         } else if (node instanceof Name) {
-            return visit((Name) node, stmt, assign, type);
+            return visit((Name) node, context);
         } else if (node instanceof NullLiteral) {
-            return visit((NullLiteral) node, stmt, assign, type);
+            return visit((NullLiteral) node, context);
         } else if (node instanceof NumberLiteral) {
-            return visit((NumberLiteral) node, stmt, assign, type);
+            return visit((NumberLiteral) node, context);
         } else if (node instanceof ParenthesizedExpression) {
-            return visit((ParenthesizedExpression) node, stmt, assign, type);
+            return visit((ParenthesizedExpression) node, context);
         } else if (node instanceof PostfixExpression) {
-            return visit((PostfixExpression) node, stmt, assign, type);
+            return visit((PostfixExpression) node, context);
         } else if (node instanceof PrefixExpression) {
-            return visit((PrefixExpression) node, stmt, assign, type);
+            return visit((PrefixExpression) node, context);
         } else if (node instanceof StringLiteral) {
-            return visit((StringLiteral) node, stmt, assign, type);
+            return visit((StringLiteral) node, context);
         } else if (node instanceof SuperFieldAccess) {
-            return visit((SuperFieldAccess) node, stmt, assign, type);
+            return visit((SuperFieldAccess) node, context);
         } else if (node instanceof SuperMethodInvocation) {
-            return visit((SuperMethodInvocation) node, stmt, assign, type);
+            return visit((SuperMethodInvocation) node, context);
         } else if (node instanceof SuperMethodReference) {
-            return visit((SuperMethodReference) node, stmt, assign, type);
+            return visit((SuperMethodReference) node, context);
         } else if (node instanceof ThisExpression) {
-            return visit((ThisExpression) node, stmt, assign, type);
+            return visit((ThisExpression) node, context);
         } else if (node instanceof TypeLiteral) {
-            return visit((TypeLiteral) node, stmt, assign, type);
+            return visit((TypeLiteral) node, context);
         } else if (node instanceof TypeMethodReference) {
-            return visit((TypeMethodReference) node, stmt, assign, type);
+            return visit((TypeMethodReference) node, context);
         } else if (node instanceof VariableDeclarationExpression) {
-            return visit((VariableDeclarationExpression) node, stmt, assign, type);
+            return visit((VariableDeclarationExpression) node, context);
         } else if (node instanceof AnonymousClassDeclaration) {
-            return visit((AnonymousClassDeclaration) node, stmt, assign, type);
+            return visit((AnonymousClassDeclaration) node, context);
         } else if (node instanceof VariableDeclarationFragment) {
-            return visit((VariableDeclarationFragment) node, stmt, assign, type);
+            return visit((VariableDeclarationFragment) node, context);
         } else if (node instanceof SingleVariableDeclaration) {
-            return visit((SingleVariableDeclaration) node, stmt, assign, type);
+            return visit((SingleVariableDeclaration) node, context);
         } else if (node instanceof MethodDeclaration) {
-            return visit((MethodDeclaration) node, stmt, assign, type);
+            return visit((MethodDeclaration) node, context);
         } else if (node instanceof CatchClause) {
-            return visit((CatchClause) node, stmt, assign, type);
+            return visit((CatchClause) node, context);
         } else {
             LevelLogger.error("UNKNOWN ASTNode type : " + node.toString());
             return null;
         }
-    }
-
-    public ArrayList<Stmt> getStatementList() {
-        return _inform.getStatementList();
-    }
-
-    public ArrayList<VarNode> getReturnList() {
-        return _inform.getReturnList();
-    }
-
-    public ArrayList<VarNode> getEntryList() {
-        return _inform.getEntryList();
-    }
-
-    public String getSource() {
-        return _inform.genFigaroSource();
     }
 
     private static String typeToString(int type) {
@@ -911,4 +961,120 @@ public class TmpASTVisitor {
                 return "ERROR";
         }
     }
+
+    private class Context {
+        private Stmt _structure = null;
+        private Stmt _stmt = null;
+        private Assign _assign = null;
+        private ControlExpression _expr = null;
+        private int _type = VARIABLE_TYPE_NONE;
+        private boolean _isCtrl = false;
+
+        Context() {}
+
+        Context(Context context) {
+            _structure = context.getStructure();
+            _stmt = context.getStmt();
+            _assign = context.getAssign();
+            _expr = context.getControlExpr();
+            _type = context.getType();
+            _isCtrl = context.checkControl();
+        }
+
+        Context newStmtContext(Stmt stmt, int type) {
+            Context contextNew = new Context();
+            contextNew.setStructure(_structure);
+            contextNew.setStmt(stmt);
+            contextNew.setType(type);
+            return contextNew;
+        }
+        
+        Context newConditionContext(Stmt stmt) {
+            Context contextNew = new Context();
+            contextNew.setStructure(stmt);
+            contextNew.setStmt(stmt);
+            contextNew.setType(VARIABLE_TYPE_USE);
+            contextNew.setControl(true);
+            return contextNew;
+        }
+
+        Context newBranchContext(Stmt stmt) {
+            Context contextNew = new Context();
+            contextNew.setStructure(stmt);
+            return contextNew;
+        }
+
+        Context newExprContext() {
+            Context contextNew = new Context(this);
+            contextNew.setType(VARIABLE_TYPE_USE);
+            return contextNew;
+        }
+
+        Context newControlContext(ControlExpression expr) {
+            Context contextNew = new Context(this);
+            contextNew.setControlExpr(expr);
+            contextNew.setControl(false);
+            return contextNew;
+        }
+
+        Context newAssignContext(Assign assign, int type) {
+            Context contextNew = new Context(this);
+            contextNew.setAssign(assign);
+            contextNew.setType(type);
+            return contextNew;
+        }
+
+        Stmt getStmt() {
+            return _stmt;
+        }
+
+        private void setStmt(Stmt stmt) {
+            _stmt = stmt;
+        }
+
+        Assign getAssign() {
+            return _assign;
+        }
+
+        private void setAssign(Assign assign) {
+            _assign = assign;
+        }
+
+        Stmt getStructure() {
+            return _structure;
+        }
+
+        private void setStructure(Stmt stmt) {
+            _structure = stmt;
+        }
+
+        ControlExpression getControlExpr() {
+            return _expr;
+        }
+
+        private void setControlExpr(ControlExpression control) {
+            _expr = control;
+        }
+
+        int getType() {
+            return _type;
+        }
+
+        private void setType(int type) {
+            _type = type;
+        }
+
+        boolean checkControl() {
+            return _isCtrl;
+        }
+
+        private void setControl(boolean isCond) {
+            _isCtrl = isCond;
+        }
+
+    }
 }
+
+
+
+

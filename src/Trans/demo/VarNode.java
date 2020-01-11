@@ -5,16 +5,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 class VarNode {
-    private SourceInform _inform;
     private String _name;
 
     static String transID2Name(String varID) {
         return varID.replace('.', '_');
     }
 
-    VarNode(String varName, SourceInform inform) {
+    VarNode(String varName) {
         _name = varName;
-        _inform = inform;
     }
 
     String getName() {

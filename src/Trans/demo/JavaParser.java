@@ -10,7 +10,7 @@ import org.eclipse.jdt.core.dom.*;
 
 public class JavaParser {
 
-    public static String readFileToString(String srcFile) {
+    private static String readFileToString(String srcFile) {
         if (srcFile == null) {
             LevelLogger.error("#readFileToString Illegal input file path : null.");
             return "";
@@ -68,41 +68,15 @@ public class JavaParser {
 
         for (MethodDeclaration sm : srcMethods) {
             TmpASTVisitor parser = new TmpASTVisitor(srcUnit, srcFile);
-            parser.process(sm);
-            printResult(parser);
+            SourceInform inform = parser.process(sm);
+            inform.build();
+            printResult(inform);
         }
     }
 
-    static void printResult(TmpASTVisitor parser) {
-        System.out.println("-------------------------------------");
-        /*ArrayList<VarNode> entryList = parser.getEntryList();
-        System.out.print("Entry Variables: ");
-        for (VarNode var : entryList)
-            System.out.print(var.getName() + " ");
-        System.out.println();
-
-        ArrayList<VarNode> retList = parser.getReturnList();
-        System.out.print("Return Variables: ");
-        for (VarNode var : retList)
-            System.out.print(var.getName() + " ");
-        System.out.println();
-
-        ArrayList<Stmt> stmtList = parser.getStatementList();
-        for (Stmt stmt : stmtList) {
-            System.out.print("Stmt" + stmt.getLine() + ": ");
-
-            for (Assign assign : stmt.getAssign()) {
-                System.out.print("Def[ " + assign.getDef().getName() + " ] ");
-
-                System.out.print("Use[ ");
-                ArrayList<VarNode> useList = assign.getUse();
-                for (VarNode var : useList)
-                    System.out.print(var.getName() + " ");
-                System.out.print("] ; ");
-            }
-            System.out.println();
-        }*/
-        System.out.println(parser.getSource());
+    static void printResult(SourceInform inform) {
+        inform.printAnalyzeInform();
+        //System.out.println(inform.genFigaroSource());
     }
 
     static class MethodDeclCollector extends ASTVisitor {

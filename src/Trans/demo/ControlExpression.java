@@ -2,28 +2,18 @@ package Trans.demo;
 
 import java.util.ArrayList;
 
-class Assign {
-    private int _column;
+class ControlExpression {
     private int _line;
-    private VarNode _def;
+    private int _column;
     private ArrayList<VarNode> _use = new ArrayList<>();
 
-    Assign(Stmt stmt, int line, int column) {
+    ControlExpression(int line, int column) {
         _line = line;
         _column = column;
-        stmt.addAssign(this);
     }
 
-    void setDef(VarNode def) {
-        _def = def;
-    }
-
-    VarNode getDef() {
-        return _def;
-    }
-
-    void addUse(VarNode use) {
-        _use.add(use);
+    void addUse(VarNode var) {
+        _use.add(var);
     }
 
     ArrayList<VarNode> getUse() {
