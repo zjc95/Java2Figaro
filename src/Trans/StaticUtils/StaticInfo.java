@@ -1,4 +1,4 @@
-package Trans.demo;
+package Trans.StaticUtils;
 
 import javafx.util.Pair;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class SourceInform {
+public class StaticInfo {
     private static int _patchNum = 0;
     private int _patchID;
     private ArrayList<VarNode> _entry = new ArrayList<>();;
@@ -19,7 +19,7 @@ public class SourceInform {
     private Map<String, Assign> _assignMap = new HashMap<>();
     private Map<String, ControlExpression> _ctrlExprMap = new HashMap<>();
 
-    SourceInform() {
+    StaticInfo() {
         _patchID = ++_patchNum;
     }
 

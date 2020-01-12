@@ -1,15 +1,12 @@
-package Trans.demo;
+package Trans.StaticUtils;
 
 import java.util.ArrayList;
 
-class ControlExpression {
-    private int _line;
-    private int _column;
+class ControlExpression extends StaticMsg {
     private ArrayList<VarNode> _use = new ArrayList<>();
 
     ControlExpression(int line, int column) {
-        _line = line;
-        _column = column;
+        super(line, column);
     }
 
     void addUse(VarNode var) {
@@ -18,13 +15,5 @@ class ControlExpression {
 
     ArrayList<VarNode> getUse() {
         return _use;
-    }
-
-    int getLine() {
-        return _line;
-    }
-
-    int getColumn() {
-        return  _column;
     }
 }

@@ -1,16 +1,13 @@
-package Trans.demo;
+package Trans.StaticUtils;
 
 import java.util.ArrayList;
 
-class Assign {
-    private int _column;
-    private int _line;
+public class Assign extends StaticMsg {
     private VarNode _def;
     private ArrayList<VarNode> _use = new ArrayList<>();
 
     Assign(Stmt stmt, int line, int column) {
-        _line = line;
-        _column = column;
+        super(line, column);
         stmt.addAssign(this);
     }
 
@@ -18,7 +15,7 @@ class Assign {
         _def = def;
     }
 
-    VarNode getDef() {
+    public VarNode getDef() {
         return _def;
     }
 
@@ -26,15 +23,7 @@ class Assign {
         _use.add(use);
     }
 
-    ArrayList<VarNode> getUse() {
+    public ArrayList<VarNode> getUse() {
         return _use;
-    }
-
-    int getLine() {
-        return _line;
-    }
-
-    int getColumn() {
-        return  _column;
     }
 }

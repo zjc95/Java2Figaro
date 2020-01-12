@@ -1,14 +1,13 @@
-package Trans.demo;
+package Trans.StaticUtils;
+import Trans.demo.LevelLogger;
 import org.eclipse.jdt.core.dom.*;
 
-import java.util.ArrayList;
-
-public class TmpASTVisitor {
+class SourceParser {
 
     private static final int VARIABLE_TYPE_NONE = 0;
     private static final int VARIABLE_TYPE_DEF = 1;
     private static final int VARIABLE_TYPE_USE = 2;
-    private SourceInform _inform;
+    private StaticInfo _inform;
     private CompilationUnit _unit;
 
     /************************** Visit MethodDeclaration ***********************/
@@ -810,14 +809,13 @@ public class TmpASTVisitor {
 
 
     /************************** Process ******************************/
-    TmpASTVisitor(CompilationUnit unit, String file) {
+    SourceParser(CompilationUnit unit, StaticInfo inform) {
         _unit = unit;
+        _inform = inform;
     }
 
-    SourceInform process(ASTNode node) {
-        _inform = new SourceInform();
+    void process(ASTNode node) {
         process(node, new Context());
-        return _inform;
     }
 
     private Stmt process(ASTNode node, Context context) {

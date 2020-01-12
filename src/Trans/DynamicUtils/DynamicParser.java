@@ -1,15 +1,11 @@
-package Trans.demo;
+package Trans.DynamicUtils;
+
+import Trans.demo.LevelLogger;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
 
-import org.eclipse.jdt.core.dom.*;
-
-public class JavaParser {
-
+public class DynamicParser {
     private static String readFileToString(String srcFile) {
         if (srcFile == null) {
             LevelLogger.error("#readFileToString Illegal input file path : null.");
@@ -56,47 +52,7 @@ public class JavaParser {
     }
 
     public static void Analyze(String srcFile) {
-        String source = readFileToString(srcFile);
-        ASTParser astParser = ASTParser.newParser(AST.JLS8);
-        astParser.setSource(source.toCharArray());
-        CompilationUnit srcUnit = (CompilationUnit) astParser.createAST(null);
+        String json = readFileToString(srcFile);
 
-        MethodDeclCollector methodDeclCollector = new MethodDeclCollector();
-        methodDeclCollector.init();
-        srcUnit.accept(methodDeclCollector);
-        List<MethodDeclaration> srcMethods = methodDeclCollector.getAllMethDecl();
-
-        for (MethodDeclaration sm : srcMethods) {
-            TmpASTVisitor parser = new TmpASTVisitor(srcUnit, srcFile);
-            SourceInform inform = parser.process(sm);
-            inform.build();
-            printResult(inform);
-        }
-    }
-
-    static void printResult(SourceInform inform) {
-        inform.printAnalyzeInform();
-        //System.out.println(inform.genFigaroSource());
-    }
-
-    static class MethodDeclCollector extends ASTVisitor {
-
-        List<MethodDeclaration> methodDeclarations;
-
-        public MethodDeclCollector() {
-        }
-
-        public void init() {
-            methodDeclarations = new LinkedList<>();
-        }
-
-        public List<MethodDeclaration> getAllMethDecl() {
-            return methodDeclarations;
-        }
-
-        public boolean visit(MethodDeclaration md) {
-            methodDeclarations.add(md);
-            return true;
-        }
     }
 }

@@ -1,4 +1,4 @@
-package Trans.demo;
+package Trans.StaticUtils;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 
@@ -6,9 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-class Stmt {
-    private int _line;
-    private int _column;
+class Stmt extends StaticMsg {
     private Stmt _structure;
     private ASTNode _node;
     private ArrayList<Assign> _assign = new ArrayList<>();
@@ -16,10 +14,9 @@ class Stmt {
     private Map<String, VarNode> _use = new HashMap<>();
 
     Stmt(ASTNode node, Stmt structure, int line, int column) {
+        super(line, column);
         _node = node;
         _structure = structure;
-        _line = line;
-        _column = column;
     }
 
     ASTNode getNode() {
@@ -50,13 +47,5 @@ class Stmt {
 
     ArrayList<VarNode> getUse() {
         return new ArrayList<>(_use.values());
-    }
-
-    int getLine() {
-        return _line;
-    }
-
-    int getColumn() {
-        return  _column;
     }
 }
