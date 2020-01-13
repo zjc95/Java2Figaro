@@ -22,16 +22,16 @@ public class StaticParser {
         srcUnit.accept(methodDeclCollector);
         List<MethodDeclaration> srcMethods = methodDeclCollector.getAllMethDecl();
 
-        StaticInfo inform = new StaticInfo();
+        StaticInfo info = new StaticInfo();
 
         for (MethodDeclaration sm : srcMethods) {
-            SourceParser parser = new SourceParser(srcUnit, inform);
+            SourceParser parser = new SourceParser(srcUnit, info);
             parser.process(sm);
         }
 
-        inform.build();
-        printResult(inform);
-        return inform;
+        info.build();
+        LevelLogger.debug(info.AnalyzeInformation());
+        return info;
     }
 
     private static String readFileToString(String srcFile) {
@@ -77,10 +77,6 @@ public class StaticParser {
             }
         }
         return stringBuffer.toString();
-    }
-
-    private static void printResult(StaticInfo inform) {
-        LevelLogger.debug(inform.AnalyzeInformation());
     }
 
     static class MethodDeclCollector extends ASTVisitor {

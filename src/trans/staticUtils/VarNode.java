@@ -1,18 +1,16 @@
 package trans.staticUtils;
 
 public class VarNode {
+    private String _id;
     private String _name;
 
-    static String transID2Name(String varID) {
+    private static String transID2Name(String varID) {
         return varID.replace('.', '_');
     }
 
-    private static String transName2ID(String varName) {
-        return varName.replace('_','.');
-    }
-
-    VarNode(String varName) {
-        _name = varName;
+    VarNode(String varID) {
+        _id = varID;
+        _name = transID2Name(varID);
     }
 
     public String getName() {
@@ -20,7 +18,7 @@ public class VarNode {
     }
 
     public String getID() {
-        return transName2ID(_name);
+        return _id;
     }
 
 }

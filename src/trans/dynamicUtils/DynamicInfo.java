@@ -21,8 +21,7 @@ public class DynamicInfo {
         _stcInfo = stcInfo;
         _json = json;
     }
-
-
+    
     /***************Dynamic Inform Parse*********************/
     private ArrayList<DynamicMsg> _msgList = new ArrayList<>();
     private Map<String, DynamicStmt> _structureMap = new HashMap<>();

@@ -37,7 +37,7 @@ object patch {
 
     //-------------Constraint--------------
     Var_this_even.addConstraint((b: Boolean) => if (b) 0.8 else 0.19999999999999996)
-    Var_this_size.addConstraint((b: Boolean) => if (b) 0.9 else 0.09999999999999998)
+    Var_this_size.addConstraint((b: Boolean) => if (b) 0.1 else 0.9)
 
     //-------------Sampling--------------
     val samplePatchValid = VariableElimination(Ret)

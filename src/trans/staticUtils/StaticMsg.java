@@ -18,6 +18,10 @@ public class StaticMsg {
     }
 
     public String getKey() {
-        return _line + "," + _column;
+        return getKey(_line, _column);
+    }
+
+    static String getKey(int line, int column) {
+        return line + "," + column;
     }
 }

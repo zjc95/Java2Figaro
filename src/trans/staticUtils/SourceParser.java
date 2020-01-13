@@ -7,14 +7,14 @@ class SourceParser {
     private static final int VARIABLE_TYPE_NONE = 0;
     private static final int VARIABLE_TYPE_DEF = 1;
     private static final int VARIABLE_TYPE_USE = 2;
-    private StaticInfo _inform;
+    private StaticInfo _info;
     private CompilationUnit _unit;
 
     /************************** Visit MethodDeclaration ***********************/
 
     private Stmt visit(MethodDeclaration node, Context context) {
         Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
-        _inform.addStatement(stmt);
+        _info.addStatement(stmt);
 
         //process(node.getName(), context.newStmtContext(stmt, VARIABLE_TYPE_NONE));
         Context contextParam = context.newStmtContext(stmt, VARIABLE_TYPE_DEF);
@@ -48,7 +48,7 @@ class SourceParser {
      */
     private Stmt visit(ConstructorInvocation node, Context context) {
         Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
-        _inform.addStatement(stmt);
+        _info.addStatement(stmt);
 
         Context contextParam = context.newStmtContext(stmt, VARIABLE_TYPE_USE);
         for (Object object : node.arguments())
@@ -64,7 +64,7 @@ class SourceParser {
      */
     private Stmt visit(SuperConstructorInvocation node, Context context) {
         Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
-        _inform.addStatement(stmt);
+        _info.addStatement(stmt);
         //if (node.getExpression() != null)
         //    process(node.getExpression(), context.newStmtContext(stmt, VARIABLE_TYPE_NONE));
         Context contextParam = context.newStmtContext(stmt, VARIABLE_TYPE_USE);
@@ -79,7 +79,7 @@ class SourceParser {
      */
     private Stmt visit(AssertStatement node, Context context) {
         Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
-        _inform.addStatement(stmt);
+        _info.addStatement(stmt);
 
         //process(node.getExpression(), context.newStmtContext(stmt, VARIABLE_TYPE_NONE));
         process(node.getMessage(), context.newStmtContext(stmt, VARIABLE_TYPE_USE));
@@ -92,7 +92,7 @@ class SourceParser {
      */
     private Stmt visit(BreakStatement node, Context context) {
         Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
-        _inform.addStatement(stmt);
+        _info.addStatement(stmt);
         return null;
     }
 
@@ -102,7 +102,7 @@ class SourceParser {
      */
     private Stmt visit(ContinueStatement node, Context context) {
         Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
-        _inform.addStatement(stmt);
+        _info.addStatement(stmt);
         return null;
     }
 
@@ -112,7 +112,7 @@ class SourceParser {
      */
     private Stmt visit(EmptyStatement node, Context context) {
         Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
-        _inform.addStatement(stmt);
+        _info.addStatement(stmt);
         return null;
     }
 
@@ -122,7 +122,7 @@ class SourceParser {
      */
     private Stmt visit(ExpressionStatement node, Context context) {
         Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
-        _inform.addStatement(stmt);
+        _info.addStatement(stmt);
         process(node.getExpression(), context.newStmtContext(stmt, VARIABLE_TYPE_USE));
         return null;
     }
@@ -143,7 +143,7 @@ class SourceParser {
      */
     private Stmt visit(ReturnStatement node, Context context) {
         Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
-        _inform.addStatement(stmt);
+        _info.addStatement(stmt);
         if (node.getExpression() != null)
             process(node.getExpression(), context.newStmtContext(stmt, VARIABLE_TYPE_USE));
         return null;
@@ -155,7 +155,7 @@ class SourceParser {
      */
     private Stmt visit(SynchronizedStatement node, Context context) {
         Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
-        _inform.addStatement(stmt);
+        _info.addStatement(stmt);
         if (node.getExpression() != null)
             process(node.getExpression(), context.newStmtContext(stmt, VARIABLE_TYPE_USE));
         process(node.getBody(), context.newBranchContext(stmt));
@@ -169,7 +169,7 @@ class SourceParser {
      */
     private Stmt visit(TypeDeclarationStatement node, Context context) {
         Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
-        _inform.addStatement(stmt);
+        _info.addStatement(stmt);
         return null;
     }
 
@@ -179,7 +179,7 @@ class SourceParser {
      */
     private Stmt visit(VariableDeclarationStatement node, Context context) {
         Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
-        _inform.addStatement(stmt);
+        _info.addStatement(stmt);
 
         Context contextParam = context.newStmtContext(stmt, VARIABLE_TYPE_DEF);
         for (Object object : node.fragments())
@@ -194,7 +194,7 @@ class SourceParser {
      */
     private Stmt visit(IfStatement node, Context context) {
         Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
-        _inform.addStatement(stmt);
+        _info.addStatement(stmt);
 
         process(node.getExpression(), context.newConditionContext(stmt));
         Context contextBranch = context.newBranchContext(stmt);
@@ -211,7 +211,7 @@ class SourceParser {
      */
     private Stmt visit(SwitchCase node, Context context) {
         Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
-        _inform.addStatement(stmt);
+        _info.addStatement(stmt);
 
         if (node.getExpression() != null)
             process(node.getExpression(), context.newStmtContext(stmt, VARIABLE_TYPE_USE));
@@ -228,7 +228,7 @@ class SourceParser {
      */
     private Stmt visit(SwitchStatement node, Context context) {
         Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
-        _inform.addStatement(stmt);
+        _info.addStatement(stmt);
         
         process(node.getExpression(), context.newStmtContext(stmt, VARIABLE_TYPE_USE));
 
@@ -249,7 +249,7 @@ class SourceParser {
      */
     private Stmt visit(EnhancedForStatement node, Context context) {
         Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
-        _inform.addStatement(stmt);
+        _info.addStatement(stmt);
 
         Assign assign = new Assign(context.getStmt(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
         Context contextExpr = context.newStmtContext(stmt, VARIABLE_TYPE_USE);
@@ -273,7 +273,7 @@ class SourceParser {
      */
     private Stmt visit(ForStatement node, Context context) {
         Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
-        _inform.addStatement(stmt);
+        _info.addStatement(stmt);
 
         if (!node.initializers().isEmpty()) {
             Context contextInit = context.newStmtContext(stmt, VARIABLE_TYPE_USE);
@@ -300,7 +300,7 @@ class SourceParser {
      */
     private Stmt visit(DoStatement node, Context context) {
         Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
-        _inform.addStatement(stmt);
+        _info.addStatement(stmt);
 
         process(node.getExpression(), context.newConditionContext(stmt));
         process(node.getBody(), context.newBranchContext(stmt));
@@ -313,7 +313,7 @@ class SourceParser {
      */
     private Stmt visit(WhileStatement node, Context context) {
         Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
-        _inform.addStatement(stmt);
+        _info.addStatement(stmt);
 
         process(node.getExpression(), context.newConditionContext(stmt));
         process(node.getBody(), context.newBranchContext(stmt));
@@ -330,7 +330,7 @@ class SourceParser {
      */
     private Stmt visit(TryStatement node, Context context) {
         Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
-        _inform.addStatement(stmt);
+        _info.addStatement(stmt);
 
         Context contextStmt = context.newStmtContext(stmt, VARIABLE_TYPE_USE);
         if (node.resources() != null)
@@ -357,7 +357,7 @@ class SourceParser {
      */
     private Stmt visit(CatchClause node, Context context) {
         Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
-        _inform.addStatement(stmt);
+        _info.addStatement(stmt);
 
         process(node.getException(), context.newStmtContext(stmt, VARIABLE_TYPE_DEF));
         process(node.getBody(), context.newBranchContext(stmt));
@@ -370,7 +370,7 @@ class SourceParser {
      */
     private Stmt visit(ThrowStatement node, Context context) {
         Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
-        _inform.addStatement(stmt);
+        _info.addStatement(stmt);
 
         process(node.getExpression(), context.newStmtContext(stmt, VARIABLE_TYPE_USE));
         return null;
@@ -635,11 +635,11 @@ class SourceParser {
         VarNode var;
         switch (context.getType()){
             case VARIABLE_TYPE_DEF:
-                var = _inform.addVar(varID);
+                var = _info.addVar(varID);
                 context.getAssign().setDef(var);
                 break;
             case VARIABLE_TYPE_USE:
-                var = _inform.addVar(varID);
+                var = _info.addVar(varID);
                 context.getStmt().addUse(var);
                 if (context.getAssign() != null)
                     context.getAssign().addUse(var);
@@ -661,11 +661,11 @@ class SourceParser {
         VarNode var;
         switch (context.getType()){
             case VARIABLE_TYPE_DEF:
-                var = _inform.addVar(varID);
+                var = _info.addVar(varID);
                 context.getAssign().setDef(var);
                 break;
             case VARIABLE_TYPE_USE:
-                var = _inform.addVar(varID);
+                var = _info.addVar(varID);
                 context.getStmt().addUse(var);
                 if (context.getAssign() != null)
                     context.getAssign().addUse(var);
@@ -686,11 +686,11 @@ class SourceParser {
         VarNode var;
         switch (context.getType()){
             case VARIABLE_TYPE_DEF:
-                var = _inform.addVar(varID);
+                var = _info.addVar(varID);
                 context.getAssign().setDef(var);
                 break;
             case VARIABLE_TYPE_USE:
-                var = _inform.addVar(varID);
+                var = _info.addVar(varID);
                 context.getStmt().addUse(var);
                 if (context.getAssign() != null)
                     context.getAssign().addUse(var);
@@ -811,7 +811,7 @@ class SourceParser {
     /************************** Process ******************************/
     SourceParser(CompilationUnit unit, StaticInfo inform) {
         _unit = unit;
-        _inform = inform;
+        _info = inform;
     }
 
     void process(ASTNode node) {
@@ -964,7 +964,7 @@ class SourceParser {
         private Stmt _structure = null;
         private Stmt _stmt = null;
         private Assign _assign = null;
-        private ControlExpression _expr = null;
+        private ControlExpression _ctrlExpr = null;
         private int _type = VARIABLE_TYPE_NONE;
         private boolean _isCtrl = false;
 
@@ -974,7 +974,7 @@ class SourceParser {
             _structure = context.getStructure();
             _stmt = context.getStmt();
             _assign = context.getAssign();
-            _expr = context.getControlExpr();
+            _ctrlExpr = context.getControlExpr();
             _type = context.getType();
             _isCtrl = context.checkControl();
         }
@@ -1047,11 +1047,11 @@ class SourceParser {
         }
 
         ControlExpression getControlExpr() {
-            return _expr;
+            return _ctrlExpr;
         }
 
         private void setControlExpr(ControlExpression control) {
-            _expr = control;
+            _ctrlExpr = control;
         }
 
         int getType() {

@@ -5,7 +5,7 @@ import java.util.ArrayList;
 public class Assign extends StaticMsg {
     private VarNode _def;
     private Stmt _stmt;
-    private ArrayList<VarNode> _use = new ArrayList<>();
+    private ArrayList<VarNode> _useList = new ArrayList<>();
 
     Assign(Stmt stmt, int line, int column) {
         super(line, column);
@@ -22,11 +22,11 @@ public class Assign extends StaticMsg {
     }
 
     void addUse(VarNode use) {
-        _use.add(use);
+        _useList.add(use);
     }
 
-    public ArrayList<VarNode> getUse() {
-        return _use;
+    public ArrayList<VarNode> getUseList() {
+        return _useList;
     }
 
     public Stmt getStmt() {

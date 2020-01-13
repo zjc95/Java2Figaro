@@ -9,9 +9,9 @@ import java.util.Map;
 public class Stmt extends StaticMsg {
     private Stmt _structure;
     private ASTNode _node;
-    private ArrayList<Assign> _assign = new ArrayList<>();
-    private ArrayList<ControlExpression> _controlExpr = new ArrayList<>();
-    private Map<String, VarNode> _use = new HashMap<>();
+    private ArrayList<Assign> _assignList = new ArrayList<>();
+    private ArrayList<ControlExpression> _controlExprList = new ArrayList<>();
+    private Map<String, VarNode> _useList = new HashMap<>();
 
     Stmt(ASTNode node, Stmt structure, int line, int column) {
         super(line, column);
@@ -24,33 +24,33 @@ public class Stmt extends StaticMsg {
     }
 
     void addAssign(Assign assign) {
-        _assign.add(assign);
+        _assignList.add(assign);
     }
 
-    ArrayList<Assign> getAssign() {
-        return _assign;
+    ArrayList<Assign> getAssignList() {
+        return _assignList;
     }
 
     void addControlExpr(ControlExpression expr) {
-        _controlExpr.add(expr);
+        _controlExprList.add(expr);
     }
 
-    ArrayList<ControlExpression> getControlExpr() {
-        return _controlExpr;
+    ArrayList<ControlExpression> getControlExprList() {
+        return _controlExprList;
     }
 
     public boolean isControlStmt() {
-        return _controlExpr.size() > 0;
+        return _controlExprList.size() > 0;
     }
 
     void addUse(VarNode use) {
-        String varName = use.getName();
-        if (!_use.containsKey(varName))
-            _use.put(varName, use);
+        String varID = use.getID();
+        if (!_useList.containsKey(varID))
+            _useList.put(varID, use);
     }
 
-    public ArrayList<VarNode> getUse() {
-        return new ArrayList<>(_use.values());
+    public ArrayList<VarNode> getUseList() {
+        return new ArrayList<>(_useList.values());
     }
 
     public Stmt getStructure() {

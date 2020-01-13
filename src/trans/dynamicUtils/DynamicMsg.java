@@ -20,11 +20,11 @@ public class DynamicMsg {
         _msg = msg;
     }
 
-    int getLine() {
+    private int getLine() {
         return _line;
     }
 
-    int getColumn() {
+    private int getColumn() {
         return  _column;
     }
 

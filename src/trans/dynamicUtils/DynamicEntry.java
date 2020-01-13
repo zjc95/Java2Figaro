@@ -2,16 +2,12 @@ package trans.dynamicUtils;
 
 import trans.staticUtils.Assign;
 
-public class DynamicEntry extends DynamicMsg {
+class DynamicEntry extends DynamicMsg {
     private String _value;
 
     DynamicEntry(DynamicInfo info, int line, int column, Assign assign, String value) {
         super(info, line, column, assign);
         _value = value;
-    }
-
-    public String getValue() {
-        return _value;
     }
 
     void parse() {

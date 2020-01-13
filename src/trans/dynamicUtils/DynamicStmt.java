@@ -9,7 +9,7 @@ import java.util.Map;
 
 public class DynamicStmt extends DynamicMsg {
     private DynamicStmt _structure = null;
-    private Map<String, String> _useFigaroID = new HashMap<>();
+    private Map<String, String> _useIDMap = new HashMap<>();
     private ArrayList<DynamicCtrlExpr> _ctrlList = new ArrayList<>();
 
     DynamicStmt(DynamicInfo info, int line, int column, Stmt stmt) {
@@ -19,8 +19,8 @@ public class DynamicStmt extends DynamicMsg {
     void parse() {
         Stmt stmt = (Stmt) _msg;
         _figaroID = _info.genStmtFigaroID(this);
-        for (VarNode var : stmt.getUse())
-            _useFigaroID.put(var.getName(), _info.genVarFigaroID(var, false));
+        for (VarNode var : stmt.getUseList())
+            _useIDMap.put(var.getID(), _info.genVarFigaroID(var, false));
         if (stmt.isControlStmt())
             _ctrlList = _info.getCtrlList();
 
@@ -32,7 +32,7 @@ public class DynamicStmt extends DynamicMsg {
         ArrayList<String> useList = new ArrayList<>();
         Stmt stmt = (Stmt) _msg;
         if (!stmt.isControlStmt())
-            useList.addAll(_useFigaroID.values());
+            useList.addAll(_useIDMap.values());
         else
             for (DynamicCtrlExpr ctrl : _ctrlList)
                 useList.add(ctrl.getFigaroID());

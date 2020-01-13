@@ -10,7 +10,7 @@ import java.util.Map;
 public class DynamicRet extends DynamicMsg {
     private String _value;
     private DynamicStmt _structure = null;
-    private Map<String, String> _useFigaroID = new HashMap<>();
+    private Map<String, String> _useIDMap = new HashMap<>();
 
     DynamicRet(DynamicInfo info, int line, int column, Stmt stmt, String value) {
         super(info, line, column, stmt);
@@ -18,19 +18,15 @@ public class DynamicRet extends DynamicMsg {
         _figaroID = "Ret";
     }
 
-    public String getValue() {
-        return _value;
-    }
-
     void parse() {
         Stmt stmt = (Stmt) _msg;
-        for (VarNode var : stmt.getUse())
-            _useFigaroID.put(var.getName(), _info.genVarFigaroID(var, false));
+        for (VarNode var : stmt.getUseList())
+            _useIDMap.put(var.getID(), _info.genVarFigaroID(var, false));
         _structure = getStructure(stmt);
     }
 
     String genSource() {
-        ArrayList<String> useList = new ArrayList<>(_useFigaroID.values());
+        ArrayList<String> useList = new ArrayList<>(_useIDMap.values());
         if (_structure != null)
             useList.add(_structure.getFigaroID());
         return genDefinitionSource(useList);
