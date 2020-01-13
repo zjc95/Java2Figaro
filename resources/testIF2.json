@@ -1,0 +1,86 @@
+{
+	"file" : "testIF.java",
+	"data" : [
+		{
+			"line" : 6,
+			"column" : 18,
+			"type" : "ENTRY",
+			"value" : "2"
+		},
+		{
+			"line" : 6,
+			"column" : 29,
+			"type" : "ENTRY",
+			"value" : "1"
+		},{
+			"line" : 6,
+			"column" : 39,
+			"type" : "ENTRY",
+			"value" : "4"
+		},
+		{
+			"line" : 9,
+			"column" : 7,
+			"type" : "CONTROL",
+			"value" : false
+		},
+		{
+			"line" : 9,
+			"column" : 2,
+			"type" : "STMT"
+		},
+		{
+			"line" : 11,
+			"column" : 11,
+			"type" : "CONTROL",
+			"value" : true
+		},
+		{
+			"line" : 11,
+			"column" : 7,
+			"type" : "STMT"
+		},
+		{
+			"line" : 12,
+			"column" : 3,
+			"type" : "ASSIGN",
+			"value" : "-1"
+		},
+		{
+			"line" : 13,
+			"column" : 3,
+			"type" : "ASSIGN",
+			"value" : "0"
+		},
+		{
+			"line" : 18,
+			"column" : 2,
+			"type" : "ASSIGN",
+			"value" : "-1"
+		},
+		{
+			"line" : 19,
+			"column" : 2,
+			"type" : "ASSIGN",
+			"value" : "0"
+		},
+		{
+			"line" : 20,
+			"column" : 2,
+			"type" : "ASSIGN",
+			"value" : "-1"
+		},
+		{
+			"line" : 21,
+			"column" : 2,
+			"type" : "ASSIGN",
+			"value" : "1"
+		},
+		{
+			"line" : 22,
+			"column" : 2,
+			"type" : "RET",
+			"value" : "1"
+		}		
+	]
+}

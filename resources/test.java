@@ -5,7 +5,7 @@ class test {
 	
 	public void func(int posX, int posY) {
 		int tempA = posX - 2;
-		int tempB = tempA + posX;
+		int tempB = tempA - posX;
 		this.even = tempA;
 		this.size = tempB;
 		this.ret = tempA + tempB + 2;

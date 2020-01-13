@@ -6,7 +6,7 @@ class testIF {
 	public void func(int patch, int posX, int posY) {
 		int tempA;
 		int tempB;
-		if ((patch >= 1) && (patch < 2))
+		if ((patch < 2) && (patch >= 1))
 			tempA = posY - 2;
 		else if (patch == 2) {
 			tempA = posX - 2;
@@ -15,7 +15,7 @@ class testIF {
 		else {
 			tempA = posX + 2;
 		}
-		tempB = tempA + posX;
+		tempB = tempA - posX;
 		this.even = tempA;
 		this.size = tempB;
 		this.ret = tempA + tempB + 2;
