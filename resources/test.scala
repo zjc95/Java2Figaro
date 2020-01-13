@@ -7,32 +7,24 @@ object patch {
     //-------------Semantic--------------
     val Var_posX = Flip(0.5)
     val Var_posY = Flip(0.5)
-    val Var_tempA = RichCPD(Var_posX, 
-      (OneOf(true)) -> Flip(0.95),
-      (*) -> Flip(0.05))
+    val Var_tempA = If(Var_posX, Flip(0.95), Flip(0.05))
     val Var_tempB = RichCPD(Var_posX, Var_tempA, 
       (OneOf(true), OneOf(true)) -> Flip(0.95),
       (*, *) -> Flip(0.05))
-    val Var_this_even = RichCPD(Var_tempA, 
-      (OneOf(true)) -> Flip(0.95),
-      (*) -> Flip(0.05))
-    val Var_this_size = RichCPD(Var_tempB, 
-      (OneOf(true)) -> Flip(0.95),
-      (*) -> Flip(0.05))
+    val Var_this_even = If(Var_tempA, Flip(0.95), Flip(0.05))
+    val Var_this_size = If(Var_tempB, Flip(0.95), Flip(0.05))
     val Var_this_ret = RichCPD(Var_tempB, Var_tempA, 
       (OneOf(true), OneOf(true)) -> Flip(0.95),
       (*, *) -> Flip(0.05))
-    val Ret = RichCPD(Var_this_ret, 
-      (OneOf(true)) -> Flip(0.95),
-      (*) -> Flip(0.05))
+    val Ret = If(Var_this_ret, Flip(0.95), Flip(0.05))
 
     //-------------Observation--------------
     Var_posX.observe(true)
     Var_posY.observe(true)
 
     //-------------Constraint--------------
-    Var_this_even.addConstraint((b: Boolean) => if (b) 0.8 else 0.19999999999999996)
-    Var_this_size.addConstraint((b: Boolean) => if (b) 0.9 else 0.09999999999999998)
+    Var_this_even.addConstraint((b: Boolean) => if (b) 0.2 else 0.8)
+    Var_this_size.addConstraint((b: Boolean) => if (b) 0.1 else 0.9)
 
     //-------------Sampling--------------
     val samplePatchValid = VariableElimination(Ret)

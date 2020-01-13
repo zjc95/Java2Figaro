@@ -15,7 +15,7 @@ public class DynamicParser {
         JSONObject rootObject = (JSONObject)JSONValue.parse(jsonSource);
 
         String srcFile = (String) rootObject.get("file");
-        System.out.println("Source File : " + srcFile);
+        LevelLogger.debug("Source File : " + srcFile);
 
         DynamicInfo dycInfo = new DynamicInfo(stcInfo, rootObject);
         dycInfo.parse();

@@ -8,54 +8,34 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class StaticInfo {
-    private static int _patchNum = 0;
-    private int _patchID;
-    private ArrayList<VarNode> _entry = new ArrayList<>();;
-    private ArrayList<Stmt> _statements = new ArrayList<>();
-    private Map<String, VarNode> _vars = new HashMap<>();
-    private Map<String, VarNode> _ret = new HashMap<>();
+    private ArrayList<Stmt> _stmtList = new ArrayList<>();
+    private Map<String, VarNode> _varMap = new HashMap<>();
     private Map<String, Stmt> _stmtMap = new HashMap<>();
     private Map<String, Assign> _assignMap = new HashMap<>();
     private Map<String, ControlExpression> _ctrlExprMap = new HashMap<>();
 
-    StaticInfo() {
-        _patchID = ++_patchNum;
-    }
-
     void build() {
-        //----------Entry List------------
-        for(Stmt stmt : _statements)
-            if (stmt.getNode() instanceof MethodDeclaration)
-                for (Assign assign : stmt.getAssign())
-                    _entry.add(assign.getDef());
-
-        //----------Return List------------
-        for(Stmt stmt : _statements)
-            if (stmt.getNode() instanceof ReturnStatement)
-                for(VarNode var : stmt.getUse())
-                    addReturn(var);
-
-        //--------Statement Map-----------
-        for (Stmt stmt : _statements)
+        //---------------Statement Map----------------
+        for (Stmt stmt : _stmtList)
             _stmtMap.put(stmt.getLine() + "," + stmt.getColumn(), stmt);
 
-        //----------Assign Map------------
-        for (Stmt stmt : _statements)
+        //----------------Assign Map-----------------
+        for (Stmt stmt : _stmtList)
             for (Assign assign : stmt.getAssign())
                 _assignMap.put(assign.getLine() + "," + assign.getColumn(), assign);
 
-        //----------Assign Map------------
-        for (Stmt stmt : _statements)
+        //----------Control Expression Map------------
+        for (Stmt stmt : _stmtList)
             for (ControlExpression expr : stmt.getControlExpr())
                 _ctrlExprMap.put(expr.getLine() + "," + expr.getColumn(), expr);
     }
 
     VarNode addVar(String varID) {
         String varName = VarNode.transID2Name(varID);
-        if (_vars.containsKey(varName))
-            return _vars.get(varName);
+        if (_varMap.containsKey(varName))
+            return _varMap.get(varName);
         VarNode var = new VarNode(varName);
-        _vars.put(varName, var);
+        _varMap.put(varName, var);
         return var;
     }
 
@@ -71,50 +51,63 @@ public class StaticInfo {
         return _ctrlExprMap.get(line + "," + column);
     }
 
-    private void addReturn(VarNode var) {
-        String varName = var.getName();
-        if (!_ret.containsKey(varName))
-            _ret.put(varName, var);
-    }
-
     void addStatement(Stmt stmt) {
-        _statements.add(stmt);
+        _stmtList.add(stmt);
     }
 
-    void printAnalyzeInform() {
-        System.out.print("Entry Variables: ");
-        for (VarNode var : _entry)
-            System.out.print(var.getName() + " ");
-        System.out.println();
+    String AnalyzeInformation() {
+        ArrayList<VarNode> entryList = new ArrayList<>();
+        Map<String, VarNode> retList = new HashMap<>();
 
-        System.out.print("Return Variables: ");
-        for (VarNode var : _ret.values())
-            System.out.print(var.getName() + " ");
-        System.out.println();
+        //----------Return List------------
+        for(Stmt stmt : _stmtList)
+            if (stmt.getNode() instanceof ReturnStatement)
+                for(VarNode var : stmt.getUse())
+                    if (!retList.containsKey(var.getName()))
+                        retList.put(var.getName(), var);
 
-        for (Stmt stmt : _statements) {
-            System.out.print("Stmt(" + stmt.getLine() + "," + stmt.getColumn() + "):   ");
+        //----------Entry List------------
+        for(Stmt stmt : _stmtList)
+            if (stmt.getNode() instanceof MethodDeclaration)
+                for (Assign assign : stmt.getAssign())
+                    entryList.add(assign.getDef());
+                
+        StringBuilder info = new StringBuilder("Static Analyze Information\n");
+        info.append("Entry Variables: ");
+        for (VarNode var : entryList)
+            info.append(var.getName()).append(" ");
+        info.append("\n");
+
+        info.append("Return Variables: ");
+        for (VarNode var : retList.values())
+            info.append(var.getName()).append(" ");
+        info.append("\n");
+
+        for (Stmt stmt : _stmtList) {
+            info.append("Stmt(").append(stmt.getLine()).append(",").append(stmt.getColumn()).append("):   ");
 
             for (Assign assign : stmt.getAssign()) {
-                System.out.print("Assign(" + assign.getLine() + "," + assign.getColumn() + ") : ");
-                System.out.print("Def[ " + assign.getDef().getName() + " ] ");
+                info.append("Assign(").append(assign.getLine()).append(",").append(assign.getColumn()).append(") : ");
+                info.append("Def[ ").append(assign.getDef().getName()).append(" ] ");
 
-                System.out.print("Use[ ");
+                info.append("Use[ ");
                 ArrayList<VarNode> useList = assign.getUse();
                 for (VarNode var : useList)
-                    System.out.print(var.getName() + " ");
-                System.out.print("] ; ");
+                    info.append(var.getName()).append(" ");
+                info.append("] ; ");
             }
 
             for (ControlExpression expr : stmt.getControlExpr()) {
-                System.out.print("Control(" + expr.getLine() + "," + expr.getColumn() + ") : ");
-                System.out.print("Use[ ");
+                info.append("Control(").append(expr.getLine()).append(",").append(expr.getColumn()).append(") : ");
+                info.append("Use[ ");
                 ArrayList<VarNode> useList = expr.getUse();
                 for (VarNode var : useList)
-                    System.out.print(var.getName() + " ");
-                System.out.print("] ; ");
+                    info.append(var.getName()).append(" ");
+                info.append("] ; ");
             }
-            System.out.println();
+            info.append("\n");
         }
+        info.append("-----------Information End---------------");
+        return info.toString();
     }
 }

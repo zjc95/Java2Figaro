@@ -10,6 +10,30 @@ import org.eclipse.jdt.core.dom.*;
 
 public class StaticParser {
 
+
+    public static StaticInfo Analyze(String srcFile) {
+        String source = readFileToString(srcFile);
+        ASTParser astParser = ASTParser.newParser(AST.JLS8);
+        astParser.setSource(source.toCharArray());
+        CompilationUnit srcUnit = (CompilationUnit) astParser.createAST(null);
+
+        MethodDeclCollector methodDeclCollector = new MethodDeclCollector();
+        methodDeclCollector.init();
+        srcUnit.accept(methodDeclCollector);
+        List<MethodDeclaration> srcMethods = methodDeclCollector.getAllMethDecl();
+
+        StaticInfo inform = new StaticInfo();
+
+        for (MethodDeclaration sm : srcMethods) {
+            SourceParser parser = new SourceParser(srcUnit, inform);
+            parser.process(sm);
+        }
+
+        inform.build();
+        printResult(inform);
+        return inform;
+    }
+
     private static String readFileToString(String srcFile) {
         if (srcFile == null) {
             LevelLogger.error("#readFileToString Illegal input file path : null.");
@@ -55,46 +79,22 @@ public class StaticParser {
         return stringBuffer.toString();
     }
 
-    public static StaticInfo Analyze(String srcFile) {
-        String source = readFileToString(srcFile);
-        ASTParser astParser = ASTParser.newParser(AST.JLS8);
-        astParser.setSource(source.toCharArray());
-        CompilationUnit srcUnit = (CompilationUnit) astParser.createAST(null);
-
-        MethodDeclCollector methodDeclCollector = new MethodDeclCollector();
-        methodDeclCollector.init();
-        srcUnit.accept(methodDeclCollector);
-        List<MethodDeclaration> srcMethods = methodDeclCollector.getAllMethDecl();
-
-        StaticInfo inform = new StaticInfo();
-
-        for (MethodDeclaration sm : srcMethods) {
-            SourceParser parser = new SourceParser(srcUnit, inform);
-            parser.process(sm);
-        }
-
-        inform.build();
-        printResult(inform);
-        return inform;
-    }
-
     private static void printResult(StaticInfo inform) {
-        inform.printAnalyzeInform();
-        //System.out.println(inform.genFigaroSource());
+        LevelLogger.debug(inform.AnalyzeInformation());
     }
 
     static class MethodDeclCollector extends ASTVisitor {
 
         List<MethodDeclaration> methodDeclarations;
 
-        public MethodDeclCollector() {
+        MethodDeclCollector() {
         }
 
-        public void init() {
+        void init() {
             methodDeclarations = new LinkedList<>();
         }
 
-        public List<MethodDeclaration> getAllMethDecl() {
+        List<MethodDeclaration> getAllMethDecl() {
             return methodDeclarations;
         }
 

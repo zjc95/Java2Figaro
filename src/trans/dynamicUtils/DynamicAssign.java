@@ -21,6 +21,11 @@ public class DynamicAssign extends DynamicMsg {
         return _value;
     }
 
+    public VarNode getDefVar() {
+        Assign assign = (Assign) _msg;
+        return assign.getDef();
+    }
+
     void parse() {
         Assign assign = (Assign) _msg;
         for (VarNode var : assign.getUse())

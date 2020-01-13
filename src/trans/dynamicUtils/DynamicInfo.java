@@ -7,6 +7,8 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import javafx.util.Pair;
+import trans.strategy.Strategy;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -28,6 +30,7 @@ public class DynamicInfo {
     private Map<String, Integer> _stmtDefTime = new HashMap<>();
     private Map<String, Integer> _controlDefTime = new HashMap<>();
     private ArrayList<DynamicCtrlExpr> _controlList = new ArrayList<>();
+    private ArrayList<Pair<String, Double>> _varObservation = new ArrayList<>();
 
     void parse() {
         JSONArray data = (JSONArray) _json.get("data");
@@ -42,6 +45,10 @@ public class DynamicInfo {
 
         for (DynamicMsg msg : _msgList)
             msg.parse();
+
+        Strategy stgGather = new Strategy();
+        stgGather.init();
+        _varObservation = stgGather.parse(_msgList);
     }
 
     private void addMessage(int line, int column, String type, Object value) {
@@ -150,14 +157,9 @@ public class DynamicInfo {
     }
 
     /***************Figaro Source Generate*********************/
-    private ArrayList<Pair<String, Double>> _varObservation = new ArrayList<>();
-    private StringBuilder _source = null;
 
     public String genFigaroSource() {
-        _varDefTime.clear();
-        _source = new StringBuilder("");
-        _varObservation.add(new Pair<>("Var_this_even", 0.8));
-        _varObservation.add(new Pair<>("Var_this_size", 0.9));
+        StringBuilder _source = new StringBuilder("");
 
         _source.append("import com.cra.figaro.algorithm.factored.VariableElimination\n");
         _source.append("import com.cra.figaro.language._\n");

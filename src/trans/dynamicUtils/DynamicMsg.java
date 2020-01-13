@@ -38,7 +38,7 @@ public class DynamicMsg {
         return null;
     }
 
-    String getFigaroID() { return _figaroID; }
+    public String getFigaroID() { return _figaroID; }
 
 
     //----------------Util--------------------
