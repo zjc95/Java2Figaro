@@ -4,11 +4,13 @@ import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.ReturnStatement;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 public class StaticInfo {
     private ArrayList<Stmt> _stmtList = new ArrayList<>();
+    private Map<String, VarNode> _varMap = new HashMap<>();
     private Map<String, Stmt> _stmtMap = new HashMap<>();
     private Map<String, Assign> _assignMap = new HashMap<>();
     private Map<String, ControlExpression> _ctrlExprMap = new HashMap<>();
@@ -27,9 +29,15 @@ public class StaticInfo {
         for (Stmt stmt : _stmtList)
             for (ControlExpression expr : stmt.getControlExprList())
                 _ctrlExprMap.put(expr.getKey(), expr);
-    }
 
-    private Map<String, VarNode> _varMap = new HashMap<>();
+        //----------Variable Relationship-------------
+        for (VarNode field : _varMap.values())
+            for (VarNode subject : _varMap.values())
+                if (checkField(field, subject)) {
+                    field.addSubject(subject);
+                    subject.addField(field);
+                }
+    }
 
     VarNode addVar(String varID) {
         if (_varMap.containsKey(varID))
@@ -49,6 +57,17 @@ public class StaticInfo {
 
     public ControlExpression getCtrlExpr(int line, int column) {
         return _ctrlExprMap.get(StaticMsg.getKey(line, column));
+    }
+
+    private boolean checkField(VarNode field, VarNode subject) {
+        ArrayList<String> fieldList = new ArrayList<>(Arrays.asList(field.getID().split(".")));
+        ArrayList<String> subjectList = new ArrayList<>(Arrays.asList(subject.getID().split(".")));
+        if (fieldList.size() >= subjectList.size())
+            return false;
+        for (int i = 0; i < fieldList.size(); i++)
+            if (!fieldList.get(i).equals(subjectList.get(i)))
+                return false;
+        return true;
     }
 
     void addStatement(Stmt stmt) {

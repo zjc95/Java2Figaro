@@ -10,6 +10,7 @@ import java.util.Map;
 public class DynamicCtrlExpr extends DynamicMsg {
     private boolean _value;
     private Map<String, String> _useIDMap = new HashMap<>();
+    private ArrayList<FieldRelation> _relationList = new ArrayList<>();
 
     DynamicCtrlExpr(DynamicInfo info, int line, int column, ControlExpression expr, boolean value) {
         super(info, line, column, expr);
@@ -19,12 +20,19 @@ public class DynamicCtrlExpr extends DynamicMsg {
     void parse() {
         ControlExpression ctrl = (ControlExpression) _msg;
         _figaroID = _info.genCtrlFigaroID(this);
-        for (VarNode var : ctrl.getUseList())
+        for (VarNode var : ctrl.getUseList()) {
+            FieldRelation relation = _info.genFieldRelation(var);
+            if (relation != null) _relationList.add(relation);
             _useIDMap.put(var.getID(), _info.genVarFigaroID(var, false));
+        }
         _info.addCtrlExpr(this);
     }
 
     String genSource() {
-        return genDefinitionSource(new ArrayList<>(_useIDMap.values()));
+        StringBuilder source = new StringBuilder();
+        for (FieldRelation relation : _relationList)
+            source.append(DynamicInfo.genDefinitionSource(relation.getDef(), relation.getUse()));
+        source.append(DynamicInfo.genDefinitionSource(_figaroID, new ArrayList<>(_useIDMap.values())));
+        return source.toString();
     }
 }

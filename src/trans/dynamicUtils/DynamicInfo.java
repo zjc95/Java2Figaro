@@ -25,6 +25,7 @@ public class DynamicInfo {
     /***************Dynamic Inform Parse*********************/
     private ArrayList<DynamicMsg> _msgList = new ArrayList<>();
     private Map<String, DynamicStmt> _structureMap = new HashMap<>();
+    private Map<String, ArrayList<Pair<String, String>>> _varFieldMap = new HashMap<>();
     private Map<String, Integer> _varDefTime = new HashMap<>();
     private Map<String, Integer> _stmtDefTime = new HashMap<>();
     private Map<String, Integer> _controlDefTime = new HashMap<>();
@@ -97,22 +98,68 @@ public class DynamicInfo {
 
     String genVarFigaroID(VarNode var, boolean isDef) {
         String varName = var.getName();
+        String varID = var.getID();
+        int varTime = 0;
 
         if (_varDefTime.containsKey(varName)) {
-            int varTime = _varDefTime.get(varName);
+            varTime = _varDefTime.get(varName);
             if (isDef) {
                 varTime = varTime + 1;
                 _varDefTime.put(varName, varTime);
             }
-            return "Var_" + varName + (varTime == 0 ? "" : "_" + varTime);
+        }
+        else {
+            if (!isDef)
+                LevelLogger.error("Error : Use Without Define : " + varID);
+            _varDefTime.put(varName, 0);
         }
 
-        if (!isDef)
-            LevelLogger.error("ERROR : Use Without Define : " + varName);
-        _varDefTime.put(varName, 0);
-        //if (!isDef) _source.append(genVarDeclaration("Var_" + varName));
-        //_varDefTime.put(varName, 0);
-        return "Var_" + varName;
+        return "Var_" + varName + (varTime == 0 ? "" : "_" + varTime);
+    }
+
+    FieldRelation genFieldRelation(VarNode var) {
+        if (!_varFieldMap.containsKey(var.getID()))
+            return null;
+
+        ArrayList<Pair<String, String>> relationList = _varFieldMap.get(var.getID());
+        if (relationList.size() == 0)
+            return null;
+
+        ArrayList<String> idList = new ArrayList<>();
+        for (Pair<String, String> relation : relationList)
+            idList.add(relation.getValue());
+        relationList.clear();
+        return new FieldRelation(genVarFigaroID(var, true), idList);
+    }
+
+    void addFieldRelation(VarNode var) {
+        ArrayList<VarNode> subjectList = var.getSubject();
+        for (VarNode subject : subjectList) {
+            String subjectID = subject.getID();
+            if (!_varFieldMap.containsKey(subjectID))
+                _varFieldMap.put(subjectID, new ArrayList<>());
+            ArrayList<Pair<String, String>> subjectRelationList = _varFieldMap.get(subjectID);
+
+            if (subjectRelationList.size() == 0)
+                insertRelation(subjectRelationList, subject, genVarFigaroID(subject, false));
+            insertRelation(subjectRelationList, var, genVarFigaroID(var, false));
+        }
+
+        ArrayList<VarNode> fieldList = var.getField();
+        for (VarNode field : fieldList) {
+            String fieldID = field.getID();
+            if (!_varFieldMap.containsKey(fieldID))
+                _varFieldMap.put(fieldID, new ArrayList<>());
+            ArrayList<Pair<String, String>> fieldRelationList = _varFieldMap.get(fieldID);
+            insertRelation(fieldRelationList, var, genVarFigaroID(var, false));
+        }
+    }
+
+    private void insertRelation(ArrayList<Pair<String, String>> relationList, VarNode var, String varFigaroID) {
+        for (Pair<String, String> relation : relationList)
+            if ((var.checkField(relation.getKey())) || (relation.getKey().equals(var.getID())))
+                relationList.remove(relation);
+        relationList.add(new Pair<>(var.getID(), varFigaroID));
     }
 
     DynamicStmt getStructure(Stmt stmt) {
@@ -199,5 +246,33 @@ public class DynamicInfo {
         _source.append("}\n");
 
         return _source.toString();
+    }
+
+    static String genDefinitionSource(String def, ArrayList<String> useList) {
+        int size = useList.size();
+        if (size == 0) {
+            LevelLogger.warn("WARNING: Empty UseList : def " + def);
+            return "    val " + def + " = Flip(0.5)\n";
+        }
+
+        if (size == 1)
+            return "    val " + def + " = If(" + useList.get(0) + ", Flip(0.95), Flip(0.05))\n";
+
+        StringBuilder source = new StringBuilder("    val " + def + " = RichCPD(");
+        for (String use : useList)
+            source.append(use).append(", ");
+        source.append("\n");
+
+        source.append("      (" + "OneOf(true)");
+        for (int i = 1; i < size; i++)
+            source.append(", OneOf(true)");
+        source.append(") -> Flip(0.95),\n");
+
+        source.append("      (" + "*");
+        for (int i = 1; i < size; i++)
+            source.append(", *");
+        source.append(") -> Flip(0.05))\n");
+
+        return source.toString();
     }
 }
