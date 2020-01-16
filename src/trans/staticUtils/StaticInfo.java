@@ -60,11 +60,16 @@ public class StaticInfo {
     }
 
     private boolean checkField(VarNode field, VarNode subject) {
-        ArrayList<String> fieldList = new ArrayList<>(Arrays.asList(field.getID().split(".")));
-        ArrayList<String> subjectList = new ArrayList<>(Arrays.asList(subject.getID().split(".")));
-        if (fieldList.size() >= subjectList.size())
+        ArrayList<String> fieldList = new ArrayList<>(Arrays.asList(field.getID().split("\\.")));
+        ArrayList<String> subjectList = new ArrayList<>(Arrays.asList(subject.getID().split("\\.")));
+
+        //System.out.println(field.getID() + " " + subject.getID());
+        //System.out.println(fieldList);
+        //System.out.println(subjectList);
+
+        if (fieldList.size() <= subjectList.size())
             return false;
-        for (int i = 0; i < fieldList.size(); i++)
+        for (int i = 0; i < subjectList.size(); i++)
             if (!fieldList.get(i).equals(subjectList.get(i)))
                 return false;
         return true;
@@ -101,6 +106,17 @@ public class StaticInfo {
         for (VarNode var : retList.values())
             info.append(var.getName()).append(" ");
         info.append("\n");
+
+        info.append("Field Relation: \n");
+        for (VarNode var : _varMap.values())
+        {
+            ArrayList<VarNode> fieldList = var.getField();
+            if (fieldList.size() == 0) continue;
+            info.append("Var ").append(var.getID()).append(" : ");
+            for (VarNode field : fieldList)
+                info.append(field.getID()).append(" ");
+            info.append("\n");
+        }
 
         for (Stmt stmt : _stmtList) {
             info.append("Stmt(").append(stmt.getLine()).append(",").append(stmt.getColumn()).append("):   ");

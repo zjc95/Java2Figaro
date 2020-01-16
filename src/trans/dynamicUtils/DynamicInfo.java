@@ -25,7 +25,7 @@ public class DynamicInfo {
     /***************Dynamic Inform Parse*********************/
     private ArrayList<DynamicMsg> _msgList = new ArrayList<>();
     private Map<String, DynamicStmt> _structureMap = new HashMap<>();
-    private Map<String, ArrayList<Pair<String, String>>> _varFieldMap = new HashMap<>();
+    private Map<String, ArrayList<Pair<VarNode, String>>> _varFieldMap = new HashMap<>();
     private Map<String, Integer> _varDefTime = new HashMap<>();
     private Map<String, Integer> _stmtDefTime = new HashMap<>();
     private Map<String, Integer> _controlDefTime = new HashMap<>();
@@ -121,45 +121,51 @@ public class DynamicInfo {
         if (!_varFieldMap.containsKey(var.getID()))
             return null;
 
-        ArrayList<Pair<String, String>> relationList = _varFieldMap.get(var.getID());
+        ArrayList<Pair<VarNode, String>> relationList = _varFieldMap.get(var.getID());
         if (relationList.size() == 0)
             return null;
 
         ArrayList<String> idList = new ArrayList<>();
-        for (Pair<String, String> relation : relationList)
-            idList.add(relation.getValue());
+        int size = relationList.size();
+        for (int i = 0; i < size; i++) {
+            Pair<VarNode, String> relation = relationList.get(i);
+            boolean flag = true;
+            for (int j = i + 1; j < size; j++)
+                if (relation.getKey().checkField(relationList.get(j).getKey().getID()))
+                    flag = false;
+            if (flag) idList.add(relation.getValue());
+        }
         relationList.clear();
         return new FieldRelation(genVarFigaroID(var, true), idList);
     }
 
     void addFieldRelation(VarNode var) {
+        ArrayList<Pair<VarNode, String>> varRelationList = _varFieldMap.get(var.getID());
+        if (varRelationList != null)
+            varRelationList.clear();
+
         ArrayList<VarNode> subjectList = var.getSubject();
         for (VarNode subject : subjectList) {
+            //System.out.println(var.getID() + " subject " + subject.getID());
             String subjectID = subject.getID();
             if (!_varFieldMap.containsKey(subjectID))
                 _varFieldMap.put(subjectID, new ArrayList<>());
-            ArrayList<Pair<String, String>> subjectRelationList = _varFieldMap.get(subjectID);
+            ArrayList<Pair<VarNode, String>> subjectRelationList = _varFieldMap.get(subjectID);
 
             if (subjectRelationList.size() == 0)
-                insertRelation(subjectRelationList, subject, genVarFigaroID(subject, false));
-            insertRelation(subjectRelationList, var, genVarFigaroID(var, false));
+                subjectRelationList.add(new Pair<>(subject, genVarFigaroID(subject, false)));
+            subjectRelationList.add(new Pair<>(var, genVarFigaroID(var, false)));
         }
 
         ArrayList<VarNode> fieldList = var.getField();
         for (VarNode field : fieldList) {
+            //System.out.println(var.getID() + " field " + field.getID());
             String fieldID = field.getID();
             if (!_varFieldMap.containsKey(fieldID))
                 _varFieldMap.put(fieldID, new ArrayList<>());
-            ArrayList<Pair<String, String>> fieldRelationList = _varFieldMap.get(fieldID);
-            insertRelation(fieldRelationList, var, genVarFigaroID(var, false));
+            ArrayList<Pair<VarNode, String>> fieldRelationList = _varFieldMap.get(fieldID);
+            fieldRelationList.add(new Pair<>(var, genVarFigaroID(var, false)));
         }
-    }
-
-    private void insertRelation(ArrayList<Pair<String, String>> relationList, VarNode var, String varFigaroID) {
-        for (Pair<String, String> relation : relationList)
-            if ((var.checkField(relation.getKey())) || (relation.getKey().equals(var.getID())))
-                relationList.remove(relation);
-        relationList.add(new Pair<>(var.getID(), varFigaroID));
     }
 
     DynamicStmt getStructure(Stmt stmt) {

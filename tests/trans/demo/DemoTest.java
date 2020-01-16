@@ -52,6 +52,16 @@ public class DemoTest {
         print(dycInfo.genFigaroSource(), outFile);
     }
 
+    @Test
+    public void testWithField() {
+        String srcFile = System.getProperty("user.dir") + "\\resources\\testField.java";
+        String jsonFile = System.getProperty("user.dir") + "\\resources\\testField.json";
+        String outFile = System.getProperty("user.dir") + "\\resources\\testField.scala";
+        StaticInfo stcInfo = StaticParser.Analyze(srcFile);
+        DynamicInfo dycInfo = DynamicParser.Analyze(jsonFile, stcInfo);
+        print(dycInfo.genFigaroSource(), outFile);
+    }
+
     private static void print(String str, String outFile) {
         File file = new File(outFile);
         try (PrintWriter output = new PrintWriter(file)) {
@@ -60,5 +70,4 @@ public class DemoTest {
             e.printStackTrace();
         }
     }
-
 }
