@@ -11,6 +11,10 @@
 - [] 实现figaro 程序编译及执行 (__2020.2.14__)
 
 - [] 应用候选补丁,实现程序trace (__2020.3.10__)
+    - [] USE RET ASSIGN 插装
+    - [] CONTROLEXPR 插装
+    - [] DEF ENTRY 插装
+    - [] 多个变量定义语句拆分
 
 - [] 添加其他策略 (__2020.2.28__)
   - [] 策略：根据assert语义确定正确性
@@ -44,7 +48,7 @@ scala解析 https://scalameta.org/docs/trees/guide.html#construct-trees
 
 c简短程序 Learning to Encode and Classify Test Executions
 
-------------git 命令--------------
+------------git命令--------------
 
 添加全部修改 git add .
 
