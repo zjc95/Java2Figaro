@@ -1,5 +1,5 @@
 package trans.staticUtils;
-import trans.demo.LevelLogger;
+import trans.common.LevelLogger;
 import org.eclipse.jdt.core.dom.*;
 
 class SourceParser {
@@ -234,10 +234,7 @@ class SourceParser {
 
         Context contextBranch = context.newBranchContext(stmt);
         for (Object object : node.statements())
-            if (object instanceof SwitchCase)
-                contextBranch = context.newBranchContext(process((ASTNode) object, contextBranch));
-            else
-                process((ASTNode) object, contextBranch);
+            process((ASTNode) object, contextBranch);
         return null;
     }
 

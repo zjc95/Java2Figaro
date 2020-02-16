@@ -1,7 +1,7 @@
 package trans.dynamicUtils;
 
 import trans.staticUtils.*;
-import trans.demo.LevelLogger;
+import trans.common.LevelLogger;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;

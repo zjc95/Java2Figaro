@@ -2,15 +2,13 @@ package trans.trace;
 
 import org.json.simple.*;
 import org.json.simple.JSONArray;
-import trans.demo.LevelLogger;
+import trans.common.LevelLogger;
 
 import java.io.*;
 
 public class Dumper {
     private static String OUT_FILE_NAME = System.getProperty("user.dir") + "\\resources\\DumpResult.json";
-    private static String _fileName = null;
-    private static JSONArray _result = null;
-
+    private static JSONArray _result  = new JSONArray();
 
     @SuppressWarnings("unchecked")
     public static Object dump(Object object, int type, int line, int column) {
@@ -20,6 +18,8 @@ public class Dumper {
         json.put("type", getTypeString(type));
         json.put("value", getValue(object));
         _result.add(json);
+        if (type == TraceUtil.TRACE_TYPE_RET)
+            write();
         return object;
     }
 
@@ -30,11 +30,6 @@ public class Dumper {
         json.put("column", column);
         json.put("type", getTypeString(type));
         _result.add(json);
-    }
-
-    public static void init(String fileName) {
-        _fileName = fileName;
-        _result = new JSONArray();
     }
 
     public static boolean write() {
@@ -62,7 +57,6 @@ public class Dumper {
     @SuppressWarnings("unchecked")
     private static String genOutString() {
         JSONObject object = new JSONObject();
-        object.put("file", _fileName);
         object.put("data", _result);
         return object.toString();
     }

@@ -1,6 +1,6 @@
 package trans.dynamicUtils;
 
-import trans.demo.LevelLogger;
+import trans.common.LevelLogger;
 import trans.staticUtils.Assign;
 import trans.staticUtils.Stmt;
 import trans.staticUtils.VarNode;

@@ -1,10 +1,6 @@
 package trans.dynamicUtils;
 
 import trans.staticUtils.StaticMsg;
-import trans.staticUtils.Stmt;
-import trans.demo.LevelLogger;
-
-import java.util.ArrayList;
 
 public class DynamicMsg {
     private int _column;
