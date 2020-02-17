@@ -13,20 +13,9 @@ public class TraceUtil {
     static final int TRACE_TYPE_CONTROL = 5;
 
     static AST _ast = AST.newAST(AST.JLS8);
-    private static AST _astOld;
-
-    static void init(AST ast) {
-        _astOld = ast;
-    }
-
-    public static ImportDeclaration genImport() {
-        ImportDeclaration importDeclaration = _ast.newImportDeclaration();
-        importDeclaration.setName(_ast.newName("trans.trace.Dumper"));
-        return importDeclaration;
-    }
 
     @SuppressWarnings("unchecked")
-    public static Statement genEntryStatement(SimpleName var, int line, int column) {
+    static Statement genEntryStatement(SimpleName var, int line, int column) {
         SimpleName simpleName = _ast.newSimpleName(var.getIdentifier());
         MethodInvocation methodInvocation = _ast.newMethodInvocation();
         methodInvocation.setExpression(_ast.newName("trans.trace.Dumper"));
@@ -39,18 +28,7 @@ public class TraceUtil {
     }
 
     @SuppressWarnings("unchecked")
-    public static Statement genControlStatement(int line, int column) {
-        MethodInvocation methodInvocation = _ast.newMethodInvocation();
-        methodInvocation.setExpression(_ast.newName("trans.trace.Dumper"));
-        methodInvocation.setName(_ast.newSimpleName("dump"));
-        methodInvocation.arguments().add(_ast.newNumberLiteral(String.valueOf(TRACE_TYPE_STMT)));
-        methodInvocation.arguments().add(_ast.newNumberLiteral(String.valueOf(line)));
-        methodInvocation.arguments().add(_ast.newNumberLiteral(String.valueOf(column)));
-        return _ast.newExpressionStatement(methodInvocation);
-    }
-
-    @SuppressWarnings("unchecked")
-    public static Expression genAssignExpression(Expression var, int line, int column) {
+    static MethodInvocation genAssignExpression(Expression var, int line, int column) {
         MethodInvocation methodInvocation = _ast.newMethodInvocation();
         methodInvocation.setExpression(_ast.newName("trans.trace.Dumper"));
         methodInvocation.setName(_ast.newSimpleName("dump"));
@@ -62,19 +40,7 @@ public class TraceUtil {
     }
 
     @SuppressWarnings("unchecked")
-    public static Expression genControlExpression(Expression var, int line, int column) {
-        MethodInvocation methodInvocation = _ast.newMethodInvocation();
-        methodInvocation.setExpression(_ast.newName("trans.trace.Dumper"));
-        methodInvocation.setName(_ast.newSimpleName("dump"));
-        methodInvocation.arguments().add(var);
-        methodInvocation.arguments().add(_ast.newNumberLiteral(String.valueOf(TRACE_TYPE_CONTROL)));
-        methodInvocation.arguments().add(_ast.newNumberLiteral(String.valueOf(line)));
-        methodInvocation.arguments().add(_ast.newNumberLiteral(String.valueOf(column)));
-        return methodInvocation;
-    }
-
-    @SuppressWarnings("unchecked")
-    public static MethodInvocation genReturnExpression(Expression expr, int line, int column) {
+    static MethodInvocation genReturnExpression(Expression expr, int line, int column) {
         MethodInvocation methodInvocation = _ast.newMethodInvocation();
         methodInvocation.setExpression(_ast.newName("trans.trace.Dumper"));
         methodInvocation.setName(_ast.newSimpleName("dump"));
@@ -86,18 +52,69 @@ public class TraceUtil {
     }
 
     @SuppressWarnings("unchecked")
-    public static Block genBlock(ArrayList<ASTNode> stmtList1, Block oldBlock) {
+    static Statement genControlStatement(int line, int column) {
+        MethodInvocation methodInvocation = _ast.newMethodInvocation();
+        methodInvocation.setExpression(_ast.newName("trans.trace.Dumper"));
+        methodInvocation.setName(_ast.newSimpleName("dump"));
+        methodInvocation.arguments().add(_ast.newNumberLiteral(String.valueOf(TRACE_TYPE_STMT)));
+        methodInvocation.arguments().add(_ast.newNumberLiteral(String.valueOf(line)));
+        methodInvocation.arguments().add(_ast.newNumberLiteral(String.valueOf(column)));
+        return _ast.newExpressionStatement(methodInvocation);
+    }
+
+    @SuppressWarnings("unchecked")
+    static MethodInvocation genControlExpression(Expression var, int line, int column) {
+        MethodInvocation methodInvocation = _ast.newMethodInvocation();
+        methodInvocation.setExpression(_ast.newName("trans.trace.Dumper"));
+        methodInvocation.setName(_ast.newSimpleName("dump"));
+        methodInvocation.arguments().add(var);
+        methodInvocation.arguments().add(_ast.newNumberLiteral(String.valueOf(TRACE_TYPE_CONTROL)));
+        methodInvocation.arguments().add(_ast.newNumberLiteral(String.valueOf(line)));
+        methodInvocation.arguments().add(_ast.newNumberLiteral(String.valueOf(column)));
+        return methodInvocation;
+    }
+
+    static ImportDeclaration genImport() {
+        ImportDeclaration importDeclaration = _ast.newImportDeclaration();
+        importDeclaration.setName(_ast.newName("trans.trace.Dumper"));
+        return importDeclaration;
+    }
+
+    static ASTNode copyNode(ASTNode node) {
+        return ASTNode.copySubtree(_ast, node);
+    }
+
+    static Block genBlock() {
+        return _ast.newBlock();
+    }
+
+    @SuppressWarnings("unchecked")
+    static Block genBlock(ASTNode stmt1, Statement stmt2) {
         Block block = _ast.newBlock();
-        block.statements().addAll(stmtList1);
-        block.statements().addAll(oldBlock.statements());
+        block.statements().add(stmt1);
+        block.statements().add(stmt2);
         return block;
     }
 
     @SuppressWarnings("unchecked")
-    public static Block genBlock(ASTNode stmt, Block oldBlock) {
+    static Block genBlock(ArrayList<ASTNode> stmtList, Block oldBlock) {
+        Block block = _ast.newBlock();
+        block.statements().addAll(stmtList);
+        for (Object object : oldBlock.statements()) {
+            ASTNode node = copyNode((ASTNode) object);
+            block.statements().add(node);
+        }
+        return block;
+    }
+
+    @SuppressWarnings("unchecked")
+    static Block genBlock(ASTNode stmt, Block oldBlock) {
         Block block = _ast.newBlock();
         block.statements().add(stmt);
-        block.statements().addAll(oldBlock.statements());
+        for (Object object : oldBlock.statements()) {
+            ASTNode node = copyNode((ASTNode) object);
+            block.statements().add(node);
+        }
         return block;
     }
 }

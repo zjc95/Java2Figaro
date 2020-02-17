@@ -14,12 +14,13 @@ public class TraceParser {
 
         MethodVisitor methodVisitor = new MethodVisitor();
         methodVisitor.init(srcUnit);
-        TraceUtil.init(srcUnit.getAST());
-        //srcUnit.accept(methodVisitor);
+
+        CompilationUnit targetUnit = (CompilationUnit) TraceUtil.copyNode(srcUnit);
+        targetUnit.accept(methodVisitor);
 
         ImportDeclaration importDeclaration = TraceUtil.genImport();
-        CompilationUnit targetUnit = (CompilationUnit) ASTNode.copySubtree(TraceUtil._ast, srcUnit);
         targetUnit.imports().add(importDeclaration);
+
         return targetUnit.toString();
     }
 }

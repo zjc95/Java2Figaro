@@ -14,6 +14,14 @@ public class TraceParserTest {
         print(source, outFile);
     }
 
+    @Test
+    public void testWithIf() {
+        String srcFile = System.getProperty("user.dir") + "\\resources\\testIf.java";
+        String outFile = System.getProperty("user.dir") + "\\resources\\testParserTrace.java";
+        String source = TraceParser.Analyze(srcFile);
+        print(source, outFile);
+    }
+
     private static void print(String str, String outFile) {
         File file = new File(outFile);
         try (PrintWriter output = new PrintWriter(file)) {
