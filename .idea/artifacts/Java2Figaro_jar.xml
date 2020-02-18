@@ -1,0 +1,11 @@
+<component name="ArtifactManager">
+  <artifact build-on-make="true" name="Java2Figaro:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/Java2Figaro_jar</output-path>
+    <root id="root">
+      <element id="archive" name="Java2Figaro.jar">
+        <element id="module-output" name="Java2Figaro" />
+      </element>
+      <element id="library" level="project" name="lib" />
+    </root>
+  </artifact>
+</component>

@@ -5,9 +5,10 @@ import org.json.simple.JSONArray;
 import trans.common.LevelLogger;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 
 public class Dumper {
-    private static String OUT_FILE_NAME = System.getProperty("user.dir") + "\\resources\\DumpResult.json";
+    private static String OUT_FILE_NAME = "D:\\program\\workspace\\Java2Figaro\\resources\\DumpResult.json";
     private static JSONArray _result  = new JSONArray();
 
     @SuppressWarnings("unchecked")
@@ -32,16 +33,15 @@ public class Dumper {
         _result.add(json);
     }
 
-    public static boolean write() {
+    public static void write() {
         File file = new File(OUT_FILE_NAME);
         BufferedWriter bufferedWriter = null;
         try {
-            bufferedWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file, true), "UTF-8"));
+            bufferedWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file, true), StandardCharsets.UTF_8));
             bufferedWriter.write(genOutString());
             bufferedWriter.write("\n");
             bufferedWriter.close();
-        } catch (IOException e) {
-            return false;
+        } catch (IOException ignored) {
         } finally {
             if (bufferedWriter != null) {
                 try {
@@ -51,7 +51,6 @@ public class Dumper {
                 }
             }
         }
-        return true;
     }
 
     @SuppressWarnings("unchecked")
@@ -68,7 +67,7 @@ public class Dumper {
                 || value.getClass() == java.lang.Byte.class || value.getClass() == java.lang.Character.class
                 || value.getClass() == java.lang.Double.class || value.getClass() == java.lang.Boolean.class
                 || value.getClass() == java.util.Date.class || value.getClass().isEnum()) {
-            return "\"" + value + "\"";
+            return value.toString();
         }
         return "";
     }

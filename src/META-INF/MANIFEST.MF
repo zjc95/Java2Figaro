@@ -1,0 +1,14 @@
+Manifest-Version: 1.0
+Main-Class: trans.common.Demo
+Class-Path: junit-4.12.jar dom4j-1.6.1.jar log4j-1.2.17.jar commons-io-2
+ .5.jar xml-apis-1.0.b2.jar commons-cli-1.3.1.jar hamcrest-core-1.3.jar 
+ json-simple-1.1.1.jar protobuf-java-3.6.1.jar org.eclipse.osgi-3.13.0.j
+ ar org.eclipse.text-3.6.300.jar mysql-connector-java-8.0.13.jar org.ecl
+ ipse.jdt.core-3.12.3.jar org.eclipse.core.jobs-3.10.0.jar org.eclipse.c
+ ore.runtime-3.14.0.jar org.eclipse.equinox.app-1.4.200.jar org.eclipse.
+ core.commands-3.9.400.jar org.eclipse.core.resources-3.13.0.jar org.ecl
+ ipse.equinox.common-3.10.0.jar org.eclipse.core.contenttype-3.7.0.jar o
+ rg.eclipse.core.filesystem-1.7.400.jar org.eclipse.core.expressions-3.6
+ .400.jar org.eclipse.equinox.registry-3.8.400.jar org.eclipse.equinox.p
+ references-3.7.100.jar
+

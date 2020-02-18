@@ -5,9 +5,18 @@ import org.eclipse.jdt.core.dom.*;
 import trans.common.Util;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Map;
 
 public class TraceParser {
+
+    public static void runCmd(String strCmd) {
+        try {
+            Runtime.getRuntime().exec("cmd /c " + strCmd).waitFor();
+        } catch (InterruptedException | IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     @SuppressWarnings("unchecked")
     public static String Analyze(String srcFile) {

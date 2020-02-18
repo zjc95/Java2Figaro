@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 public class Util {
     public static final int JAVA_LEVEL = AST.JLS8;
     public static final String JAVA_VERSION = JavaCore.VERSION_1_8;
+    public static final String JAVA2FIGARO_JAR_PATH = System.getProperty("user.dir") + "\\out\\artifacts\\Java2Figaro_jar\\Java2Figaro.jar";
 
     public static String readFileToString(String srcFile) {
         if (srcFile == null) {
@@ -53,5 +54,14 @@ public class Util {
             }
         }
         return stringBuffer.toString();
+    }
+
+    public static void print(String str, String outFile) {
+        File file = new File(outFile);
+        try (PrintWriter output = new PrintWriter(file)) {
+            output.print(str);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
