@@ -1,9 +1,15 @@
 package trans.common;
 
+import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.dom.AST;
+
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 
 public class Util {
+    public static final int JAVA_LEVEL = AST.JLS8;
+    public static final String JAVA_VERSION = JavaCore.VERSION_1_8;
+
     public static String readFileToString(String srcFile) {
         if (srcFile == null) {
             LevelLogger.error("#readFileToString Illegal input file path : null.");

@@ -1,26 +1,58 @@
 package trans.trace;
 
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.*;
 import trans.common.Util;
+
+import java.io.File;
+import java.util.Map;
 
 public class TraceParser {
 
     @SuppressWarnings("unchecked")
     public static String Analyze(String srcFile) {
-        String source = Util.readFileToString(srcFile);
-        ASTParser astParser = ASTParser.newParser(AST.JLS8);
-        astParser.setSource(source.toCharArray());
-        CompilationUnit srcUnit = (CompilationUnit) astParser.createAST(null);
+        CompilationUnit srcUnit = genASTFromSource(srcFile, null);
+        if (srcUnit == null)
+            return "";
 
         MethodVisitor methodVisitor = new MethodVisitor();
         methodVisitor.init(srcUnit);
-
-        CompilationUnit targetUnit = (CompilationUnit) TraceUtil.copyNode(srcUnit);
-        targetUnit.accept(methodVisitor);
+        TraceUtil.init(srcUnit.getAST());
+        srcUnit.accept(methodVisitor);
 
         ImportDeclaration importDeclaration = TraceUtil.genImport();
-        targetUnit.imports().add(importDeclaration);
+        srcUnit.imports().add(importDeclaration);
 
-        return targetUnit.toString();
+        return srcUnit.toString();
+    }
+
+    private static CompilationUnit genASTFromSource(String srcFile, String srcPath) {
+        String source = Util.readFileToString(srcFile);
+        if(source.isEmpty()) return null;
+
+        ASTParser astParser = ASTParser.newParser(Util.JAVA_LEVEL);
+        Map<String, String> options = JavaCore.getOptions();
+        JavaCore.setComplianceOptions(Util.JAVA_VERSION, options);
+        astParser.setCompilerOptions(options);
+
+        astParser.setSource(source.toCharArray());
+
+        astParser.setKind(ASTParser.K_COMPILATION_UNIT);
+        astParser.setResolveBindings(true);
+        srcPath = srcPath == null ? "" : srcPath;
+        astParser.setEnvironment(getClassPath(), new String[] {srcPath}, null, true);
+        astParser.setUnitName(srcFile);
+        astParser.setBindingsRecovery(true);
+
+        try{
+            return (CompilationUnit) astParser.createAST(null);
+        }catch(Exception e) {
+            return null;
+        }
+    }
+
+    private static String[] getClassPath() {
+        String property = System.getProperty("java.class.path", ".");
+        return property.split(File.pathSeparator);
     }
 }

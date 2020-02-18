@@ -4,13 +4,13 @@ import java.util.LinkedList;
 import java.util.List;
 
 import trans.common.LevelLogger;
-import org.eclipse.jdt.core.dom.*;
 import trans.common.Util;
+import org.eclipse.jdt.core.dom.*;
 
 public class StaticParser {
     public static StaticInfo Analyze(String srcFile) {
         String source = Util.readFileToString(srcFile);
-        ASTParser astParser = ASTParser.newParser(AST.JLS8);
+        ASTParser astParser = ASTParser.newParser(Util.JAVA_LEVEL);
         astParser.setSource(source.toCharArray());
         CompilationUnit srcUnit = (CompilationUnit) astParser.createAST(null);
 

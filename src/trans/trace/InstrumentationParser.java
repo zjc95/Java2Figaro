@@ -7,17 +7,23 @@ import java.util.ArrayList;
 
 public class InstrumentationParser {
     private CompilationUnit _unit;
-    private Statement tryCtrlStmt;
+    private Statement _tryCtrlStmt;
+    private Type _retType = null;
+    private Type _declType = null;
 
     /************************** Visit MethodDeclaration ***********************/
 
-    private ASTNode visit(MethodDeclaration node, int type) {
+    private ASTNode visit(MethodDeclaration node, int traceType) {
+        if(node.getReturnType2() != null)
+            _retType = TraceUtil.typeFromBinding(node.getReturnType2().resolveBinding());
+
         ArrayList<ASTNode> params = new ArrayList<>();
         for (Object arg : node.parameters())
             params.add(process((ASTNode) arg, TraceUtil.TRACE_TYPE_ENTRY));
+
         Block body = node.getBody();
         if (body != null) {
-            Block newBody = (Block) process(body, type);
+            Block newBody = (Block) process(body, traceType);
             node.setBody(TraceUtil.genBlock(params, newBody));
         }
         return node;
@@ -30,7 +36,7 @@ public class InstrumentationParser {
      * { { Statement } }
      */
     @SuppressWarnings("unchecked")
-    private ASTNode visit(Block node, int type) {
+    private ASTNode visit(Block node, int traceType) {
         Block block = TraceUtil.genBlock();
         for (Object object : node.statements()) {
             Statement astNode = (Statement) process((ASTNode) object, TraceUtil.TRACE_TYPE_NONE);
@@ -47,7 +53,7 @@ public class InstrumentationParser {
      * this ( [ Expression { , Expression } ] ) ;
      */
     @SuppressWarnings("unchecked")
-    private ASTNode visit(ConstructorInvocation node, int type) {
+    private ASTNode visit(ConstructorInvocation node, int traceType) {
         ConstructorInvocation myNode = (ConstructorInvocation) TraceUtil.copyNode(node);
 
         ArrayList<ASTNode> arguments = new ArrayList<>();
@@ -66,7 +72,7 @@ public class InstrumentationParser {
      *	    super ( [ Expression { , Expression } ] ) ;
      */
     @SuppressWarnings("unchecked")
-    private ASTNode visit(SuperConstructorInvocation node, int type) {
+    private ASTNode visit(SuperConstructorInvocation node, int traceType) {
         SuperConstructorInvocation myNode = (SuperConstructorInvocation) TraceUtil.copyNode(node);
 
         ArrayList<ASTNode> arguments = new ArrayList<>();
@@ -82,7 +88,7 @@ public class InstrumentationParser {
      * AssertStatement:
      *	assert Expression [ : Expression ] ;
      */
-    private ASTNode visit(AssertStatement node, int type) {
+    private ASTNode visit(AssertStatement node, int traceType) {
         AssertStatement myNode = (AssertStatement) TraceUtil.copyNode(node);
         myNode.setExpression((Expression) process(node.getExpression(), TraceUtil.TRACE_TYPE_NONE));
         return myNode;
@@ -92,7 +98,7 @@ public class InstrumentationParser {
      * BreakStatement:
      *	break [ Identifier ] ;
      */
-    private ASTNode visit(BreakStatement node, int type) {
+    private ASTNode visit(BreakStatement node, int traceType) {
         return TraceUtil.copyNode(node);
     }
 
@@ -100,7 +106,7 @@ public class InstrumentationParser {
      * ContinueStatement:
      * continue [ Identifier ] ;
      */
-    private ASTNode visit(ContinueStatement node, int type) {
+    private ASTNode visit(ContinueStatement node, int traceType) {
         return TraceUtil.copyNode(node);
     }
 
@@ -108,7 +114,7 @@ public class InstrumentationParser {
      * EmptyStatement:
      *	;
      */
-    private ASTNode visit(EmptyStatement node, int type) {
+    private ASTNode visit(EmptyStatement node, int traceType) {
         return TraceUtil.copyNode(node);
     }
 
@@ -116,7 +122,7 @@ public class InstrumentationParser {
      * ExpressionStatement:
      * StatementExpression ;
      */
-    private ASTNode visit(ExpressionStatement node, int type) {
+    private ASTNode visit(ExpressionStatement node, int traceType) {
         ExpressionStatement myNode = (ExpressionStatement) TraceUtil.copyNode(node);
         myNode.setExpression((Expression) process(node.getExpression(), TraceUtil.TRACE_TYPE_NONE));
         return myNode;
@@ -126,7 +132,7 @@ public class InstrumentationParser {
      * LabeledStatement:
      *	Identifier : Statement
      */
-    private ASTNode visit(LabeledStatement node, int type) {
+    private ASTNode visit(LabeledStatement node, int traceType) {
         LabeledStatement myNode = (LabeledStatement) TraceUtil.copyNode(node);
         if (node.getBody() != null)
             myNode.setBody((Statement) process(node.getBody(), TraceUtil.TRACE_TYPE_NONE));
@@ -137,14 +143,16 @@ public class InstrumentationParser {
      * ReturnStatement:
      *	return [ Expression ] ;
      */
-    private ASTNode visit(ReturnStatement node, int type) {
+    private ASTNode visit(ReturnStatement node, int traceType) {
         ReturnStatement myNode = (ReturnStatement) TraceUtil.copyNode(node);
         if (node.getExpression() != null)
         {
             Expression expression = (Expression) process(node.getExpression(), TraceUtil.TRACE_TYPE_NONE);
             int line = _unit.getLineNumber(node.getStartPosition());
             int column = _unit.getColumnNumber(node.getStartPosition());
-            myNode.setExpression(TraceUtil.genReturnExpression(expression, line, column));
+            Type type = TraceUtil.typeFromBinding(node.getExpression().resolveTypeBinding());
+            if ((type == null) || (type instanceof WildcardType)) type = _retType;
+            myNode.setExpression(TraceUtil.genReturnExpression(expression, (Type) TraceUtil.copyNode(type), line, column));
         }
         return myNode;
     }
@@ -153,7 +161,7 @@ public class InstrumentationParser {
      * SynchronizedStatement:
      *	synchronized ( Expression ) Block
      */
-    private ASTNode visit(SynchronizedStatement node, int type) {
+    private ASTNode visit(SynchronizedStatement node, int traceType) {
         SynchronizedStatement myNode = (SynchronizedStatement) TraceUtil.copyNode(node);
 
         if (node.getExpression() != null)
@@ -173,7 +181,7 @@ public class InstrumentationParser {
      *	TypeDeclaration
      *	EnumDeclaration
      */
-    private ASTNode visit(TypeDeclarationStatement node, int type) {
+    private ASTNode visit(TypeDeclarationStatement node, int traceType) {
         return TraceUtil.copyNode(node);
     }
 
@@ -182,7 +190,7 @@ public class InstrumentationParser {
      * VariableDeclarationFragment { , VariableDeclarationFragment } ;
      */
     @SuppressWarnings("unchecked")
-    private ASTNode visit(VariableDeclarationStatement node, int type) {
+    private ASTNode visit(VariableDeclarationStatement node, int traceType) {
         VariableDeclarationStatement myNode = (VariableDeclarationStatement) TraceUtil.copyNode(node);
 
         ArrayList<ASTNode> fragments = new ArrayList<>();
@@ -199,7 +207,7 @@ public class InstrumentationParser {
      * IfStatement:
      *	if ( Expression ) Statement [ else Statement]
      */
-    private ASTNode visit(IfStatement node, int type) {
+    private ASTNode visit(IfStatement node, int traceType) {
         IfStatement myNode = (IfStatement) TraceUtil.copyNode(node);
 
         myNode.setExpression((Expression) process(node.getExpression(), TraceUtil.TRACE_TYPE_CONTROL));
@@ -207,7 +215,7 @@ public class InstrumentationParser {
         int line = _unit.getLineNumber(node.getStartPosition());
         int column = _unit.getColumnNumber(node.getStartPosition());
         Statement thenStatementControl = TraceUtil.genControlStatement(line, column);
-        Statement thenStatement = (Statement) process(node.getThenStatement(), type);
+        Statement thenStatement = (Statement) process(node.getThenStatement(), traceType);
         if (thenStatement instanceof Block) {
             Block thenBlock = (Block) thenStatement;
             myNode.setThenStatement(TraceUtil.genBlock(thenStatementControl, thenBlock));
@@ -216,7 +224,7 @@ public class InstrumentationParser {
 
         if (node.getElseStatement() != null) {
             Statement elseStatementControl = TraceUtil.genControlStatement(line, column);
-            Statement elseStatement = (Statement) process(node.getElseStatement(), type);
+            Statement elseStatement = (Statement) process(node.getElseStatement(), traceType);
             if (elseStatement instanceof Block) {
                 Block elseBlock = (Block) elseStatement;
                 myNode.setElseStatement(TraceUtil.genBlock(elseStatementControl, elseBlock));
@@ -233,7 +241,7 @@ public class InstrumentationParser {
      *           case Expression  :
      *           default :
      */
-    private ASTNode visit(SwitchCase node, int type) {
+    private ASTNode visit(SwitchCase node, int traceType) {
         SwitchCase myNode = (SwitchCase) TraceUtil.copyNode(node);
 
         if (node.getExpression() != null)
@@ -250,7 +258,7 @@ public class InstrumentationParser {
      *           default :
      */
     @SuppressWarnings("unchecked")
-    private ASTNode visit(SwitchStatement node, int type) {
+    private ASTNode visit(SwitchStatement node, int traceType) {
         SwitchStatement myNode = (SwitchStatement) TraceUtil.copyNode(node);
 
         myNode.setExpression((Expression) process(node.getExpression(), TraceUtil.TRACE_TYPE_NONE));
@@ -281,7 +289,7 @@ public class InstrumentationParser {
      * for ( FormalParameter : Expression )
      * Statement
      */
-    private ASTNode visit(EnhancedForStatement node, int type) {
+    private ASTNode visit(EnhancedForStatement node, int traceType) {
         EnhancedForStatement myNode = (EnhancedForStatement) TraceUtil.copyNode(node);
 
         myNode.setParameter((SingleVariableDeclaration) process(node.getParameter(), TraceUtil.TRACE_TYPE_NONE));
@@ -289,7 +297,8 @@ public class InstrumentationParser {
         int line = _unit.getLineNumber(node.getStartPosition());
         int column = _unit.getColumnNumber(node.getStartPosition());
         Expression expression = (Expression) process(node.getExpression(), TraceUtil.TRACE_TYPE_NONE);
-        myNode.setExpression(TraceUtil.genAssignExpression(expression, line, column));
+        Type type = TraceUtil.typeFromBinding(node.getExpression().resolveTypeBinding());
+        myNode.setExpression(TraceUtil.genAssignExpression(expression, (Type) TraceUtil.copyNode(type), line, column));
 
         Statement statementControl = TraceUtil.genControlStatement(line, column);
         Statement statement = (Statement) process(node.getBody(), TraceUtil.TRACE_TYPE_NONE);
@@ -314,7 +323,7 @@ public class InstrumentationParser {
      *      Expression { , Expression }
      */
     @SuppressWarnings("unchecked")
-    private ASTNode visit(ForStatement node, int type) {
+    private ASTNode visit(ForStatement node, int traceType) {
         ForStatement myNode = (ForStatement) TraceUtil.copyNode(node);
 
         if (!node.initializers().isEmpty()) {
@@ -353,7 +362,7 @@ public class InstrumentationParser {
      * DoStatement:
      *	do Statement while ( Expression ) ;
      */
-    private ASTNode visit(DoStatement node, int type) {
+    private ASTNode visit(DoStatement node, int traceType) {
         DoStatement myNode = (DoStatement) TraceUtil.copyNode(node);
 
         myNode.setExpression((Expression) process(node.getExpression(), TraceUtil.TRACE_TYPE_CONTROL));
@@ -375,7 +384,7 @@ public class InstrumentationParser {
      * WhileStatement:
      *	while ( Expression ) Statement
      */
-    private ASTNode visit(WhileStatement node, int type) {
+    private ASTNode visit(WhileStatement node, int traceType) {
         WhileStatement myNode = (WhileStatement) TraceUtil.copyNode(node);
 
         myNode.setExpression((Expression) process(node.getExpression(), TraceUtil.TRACE_TYPE_CONTROL));
@@ -402,7 +411,7 @@ public class InstrumentationParser {
      *	    [ finally Block ]
      */
     @SuppressWarnings("unchecked")
-    private ASTNode visit(TryStatement node, int type) {
+    private ASTNode visit(TryStatement node, int traceType) {
         TryStatement myNode = (TryStatement) TraceUtil.copyNode(node);
 
         if (node.resources() != null) {
@@ -415,9 +424,9 @@ public class InstrumentationParser {
 
         int line = _unit.getLineNumber(node.getStartPosition());
         int column = _unit.getColumnNumber(node.getStartPosition());
-        tryCtrlStmt = TraceUtil.genControlStatement(line, column);
+        _tryCtrlStmt = TraceUtil.genControlStatement(line, column);
         Block block = (Block) process(node.getBody(), TraceUtil.TRACE_TYPE_NONE);
-        myNode.setBody(TraceUtil.genBlock(tryCtrlStmt, block));
+        myNode.setBody(TraceUtil.genBlock(_tryCtrlStmt, block));
 
         ArrayList<ASTNode> catchClauses = new ArrayList<>();
         for (Object object : node.catchClauses()) {
@@ -429,7 +438,7 @@ public class InstrumentationParser {
 
         if (node.getFinally() != null) {
             Block finallyBlock = (Block) process(node.getFinally(), TraceUtil.TRACE_TYPE_NONE);
-            myNode.setFinally(TraceUtil.genBlock(tryCtrlStmt, finallyBlock));
+            myNode.setFinally(TraceUtil.genBlock(_tryCtrlStmt, finallyBlock));
         }
 
         return myNode;
@@ -439,7 +448,7 @@ public class InstrumentationParser {
      * CatchClause
      *    catch ( SingleVariableDeclaration ) Block
      */
-    private ASTNode visit(CatchClause node, int type) {
+    private ASTNode visit(CatchClause node, int traceType) {
         CatchClause myNode = (CatchClause) TraceUtil.copyNode(node);
 
         Statement entryStatement = (Statement) process(node.getException(), TraceUtil.TRACE_TYPE_ENTRY);
@@ -450,7 +459,7 @@ public class InstrumentationParser {
         Block block = (Block) process(node.getBody(), TraceUtil.TRACE_TYPE_NONE);
 
         ArrayList<ASTNode> statements = new ArrayList<>();
-        statements.add(tryCtrlStmt);
+        statements.add(_tryCtrlStmt);
         statements.add(statement);
         statements.add(entryStatement);
         myNode.setBody(TraceUtil.genBlock(statements, block));
@@ -462,15 +471,15 @@ public class InstrumentationParser {
      * ThrowStatement:
      *	throw Expression ;
      */
-    private ASTNode visit(ThrowStatement node, int type) {
+    private ASTNode visit(ThrowStatement node, int traceType) {
         ThrowStatement myNode = (ThrowStatement) TraceUtil.copyNode(node);
         myNode.setExpression((Expression) process(node.getExpression(), TraceUtil.TRACE_TYPE_NONE));
         return myNode;
     }
 
     /************************** Visit Expression ******************************/
-    private Expression controlExpressionNode(Expression node, int type) {
-        if (type == TraceUtil.TRACE_TYPE_CONTROL) {
+    private Expression controlExpressionNode(Expression node, int traceType) {
+        if (traceType == TraceUtil.TRACE_TYPE_CONTROL) {
             int line = _unit.getLineNumber(node.getStartPosition());
             int column = _unit.getColumnNumber(node.getStartPosition());
             return TraceUtil.genControlExpression(node, line, column);
@@ -478,10 +487,10 @@ public class InstrumentationParser {
         return node;
     }
 
-    private int checkType(int type) {
-        if (type == TraceUtil.TRACE_TYPE_CONTROL)
+    private int checkType(int traceType) {
+        if (traceType == TraceUtil.TRACE_TYPE_CONTROL)
             return TraceUtil.TRACE_TYPE_NONE;
-        return type;
+        return traceType;
     }
 
     /**
@@ -490,7 +499,7 @@ public class InstrumentationParser {
      * MarkerAnnotation
      * SingleMemberAnnotation
      */
-    private ASTNode visit(Annotation node, int type) {
+    private ASTNode visit(Annotation node, int traceType) {
         return TraceUtil.copyNode(node);
     }
 
@@ -498,10 +507,10 @@ public class InstrumentationParser {
      * ArrayAccess:
      * Expression [ Expression ]
      */
-    private ASTNode visit(ArrayAccess node, int type) {
+    private ASTNode visit(ArrayAccess node, int traceType) {
         ArrayAccess myNode = (ArrayAccess) TraceUtil.copyNode(node);
-        myNode.setIndex((Expression) process(node.getIndex(), checkType(type)));
-        return controlExpressionNode(myNode, type);
+        myNode.setIndex((Expression) process(node.getIndex(), checkType(traceType)));
+        return controlExpressionNode(myNode, traceType);
     }
 
     /**
@@ -511,7 +520,7 @@ public class InstrumentationParser {
      * Type { , Type } > ] [ ] { [ ] } ArrayInitializer
      */
     @SuppressWarnings("unchecked")
-    private ASTNode visit(ArrayCreation node, int type) {
+    private ASTNode visit(ArrayCreation node, int traceType) {
         ArrayCreation myNode = (ArrayCreation) TraceUtil.copyNode(node);
 
         ArrayList<ASTNode> dimensions = new ArrayList<>();
@@ -521,7 +530,7 @@ public class InstrumentationParser {
         myNode.dimensions().addAll(dimensions);
 
         if (node.getInitializer() != null)
-            myNode.setInitializer((ArrayInitializer) process(node.getInitializer(), type));
+            myNode.setInitializer((ArrayInitializer) process(node.getInitializer(), traceType));
 
         return myNode;
     }
@@ -531,12 +540,12 @@ public class InstrumentationParser {
      *      { [ Expression { , Expression} [ , ]] }
      */
     @SuppressWarnings("unchecked")
-    private ASTNode visit(ArrayInitializer node, int type) {
+    private ASTNode visit(ArrayInitializer node, int traceType) {
         ArrayInitializer myNode = (ArrayInitializer) TraceUtil.copyNode(node);
 
         ArrayList<ASTNode> expressions = new ArrayList<>();
         for (Object object : node.expressions())
-            expressions.add(process((ASTNode) object, type));
+            expressions.add(process((ASTNode) object, traceType));
         myNode.expressions().clear();
         myNode.expressions().addAll(expressions);
 
@@ -547,10 +556,10 @@ public class InstrumentationParser {
      * CastExpression:
      * ( Type ) Expression
      */
-    private ASTNode visit(CastExpression node, int type) {
+    private ASTNode visit(CastExpression node, int traceType) {
         CastExpression myNode = (CastExpression) TraceUtil.copyNode(node);
-        node.setExpression((Expression) process(node.getExpression(), checkType(type)));
-        return controlExpressionNode(myNode, type);
+        node.setExpression((Expression) process(node.getExpression(), checkType(traceType)));
+        return controlExpressionNode(myNode, traceType);
     }
 
     /**
@@ -558,19 +567,19 @@ public class InstrumentationParser {
      * ( [ Expression { , Expression } ] ) [ AnonymousClassDeclaration ]
      */
     @SuppressWarnings("unchecked")
-    private ASTNode visit(ClassInstanceCreation node, int type) {
+    private ASTNode visit(ClassInstanceCreation node, int traceType) {
         ClassInstanceCreation myNode = (ClassInstanceCreation) TraceUtil.copyNode(node);
 
         ArrayList<ASTNode> arguments = new ArrayList<>();
         for (Object object : node.arguments())
-            arguments.add(process((ASTNode) object, type));
+            arguments.add(process((ASTNode) object, traceType));
         myNode.arguments().clear();
         myNode.arguments().addAll(arguments);
 
         return myNode;
     }
 
-    private ASTNode visit(AnonymousClassDeclaration node, int type) {
+    private ASTNode visit(AnonymousClassDeclaration node, int traceType) {
         return TraceUtil.copyNode(node);
     }
 
@@ -578,15 +587,15 @@ public class InstrumentationParser {
      * ConditionalExpression:
      *      Expression ? Expression : Expression
      */
-    private ASTNode visit(ConditionalExpression node, int type) {
+    private ASTNode visit(ConditionalExpression node, int traceType) {
         ConditionalExpression myNode = (ConditionalExpression) TraceUtil.copyNode(node);
-        int typeNow = checkType(type);
+        int typeNow = checkType(traceType);
 
         myNode.setExpression((Expression) process(node.getExpression(), typeNow));
         myNode.setThenExpression((Expression) process(node.getThenExpression(), typeNow));
         myNode.setElseExpression((Expression) process(node.getElseExpression(), typeNow));
 
-        return controlExpressionNode(myNode, type);
+        return controlExpressionNode(myNode, traceType);
     }
 
     /**
@@ -594,13 +603,13 @@ public class InstrumentationParser {
      *		Expression InfixOperator Expression { InfixOperator Expression }
      */
     @SuppressWarnings("unchecked")
-    private ASTNode visit(InfixExpression node, int type) {
+    private ASTNode visit(InfixExpression node, int traceType) {
         InfixExpression myNode = (InfixExpression) TraceUtil.copyNode(node);
 
-        int typeNow = type;
+        int typeNow = traceType;
         if ((node.getOperator() != InfixExpression.Operator.CONDITIONAL_AND) &&
             (node.getOperator() != InfixExpression.Operator.CONDITIONAL_OR))
-            typeNow = checkType(type);
+            typeNow = checkType(traceType);
 
         myNode.setLeftOperand((Expression) process(node.getLeftOperand(), typeNow));
         myNode.setRightOperand((Expression) process(node.getRightOperand(), typeNow));
@@ -613,17 +622,17 @@ public class InstrumentationParser {
             myNode.extendedOperands().addAll(extendedOperands);
         }
 
-        return controlExpressionNode(myNode, type);
+        return controlExpressionNode(myNode, traceType);
     }
 
     /**
      * InstanceofExpression:
      *		Expression instanceof Type
      */
-    private ASTNode visit(InstanceofExpression node, int type) {
+    private ASTNode visit(InstanceofExpression node, int traceType) {
         InstanceofExpression myNode = (InstanceofExpression) TraceUtil.copyNode(node);
-        myNode.setLeftOperand((Expression) process(node.getLeftOperand(), checkType(type)));
-        return controlExpressionNode(myNode, type);
+        myNode.setLeftOperand((Expression) process(node.getLeftOperand(), checkType(traceType)));
+        return controlExpressionNode(myNode, traceType);
     }
 
     /**
@@ -632,7 +641,7 @@ public class InstrumentationParser {
      *	( [ Identifier { , Identifier } ] ) -> Body
      *	( [ FormalParameter { , FormalParameter } ] ) -> Body
      */
-    private ASTNode visit(LambdaExpression node, int type) {
+    private ASTNode visit(LambdaExpression node, int traceType) {
         return TraceUtil.copyNode(node);
     }
 
@@ -643,26 +652,26 @@ public class InstrumentationParser {
      *    Identifier ( [ Expression { , Expression } ] )
      */
     @SuppressWarnings("unchecked")
-    private ASTNode visit(MethodInvocation node, int type) {
+    private ASTNode visit(MethodInvocation node, int traceType) {
         MethodInvocation myNode = (MethodInvocation) TraceUtil.copyNode(node);
 
-        myNode.setExpression((Expression) process(node.getExpression(), checkType(type)));
+        myNode.setExpression((Expression) process(node.getExpression(), checkType(traceType)));
         ArrayList<ASTNode> arguments = new ArrayList<>();
         for (Object object : node.arguments())
-            arguments.add(process((ASTNode) object, checkType(type)));
+            arguments.add(process((ASTNode) object, checkType(traceType)));
         myNode.arguments().clear();
         myNode.arguments().addAll(arguments);
 
-        return controlExpressionNode(myNode, type);
+        return controlExpressionNode(myNode, traceType);
     }
 
     /**
      * ParenthesizedExpression:
      *	( Expression )
      */
-    private ASTNode visit(ParenthesizedExpression node, int type) {
+    private ASTNode visit(ParenthesizedExpression node, int traceType) {
         ParenthesizedExpression myNode = (ParenthesizedExpression) TraceUtil.copyNode(node);
-        myNode.setExpression((Expression) process(node.getExpression(), type));
+        myNode.setExpression((Expression) process(node.getExpression(), traceType));
         return myNode;
     }
 
@@ -670,20 +679,20 @@ public class InstrumentationParser {
      * PostfixExpression:
      *	Expression PostfixOperator
      */
-    private ASTNode visit(PostfixExpression node, int type) {
+    private ASTNode visit(PostfixExpression node, int traceType) {
         PostfixExpression myNode = (PostfixExpression) TraceUtil.copyNode(node);
-        myNode.setOperand((Expression) process(node.getOperand(), checkType(type)));
-        return controlExpressionNode(myNode, type);
+        myNode.setOperand((Expression) process(node.getOperand(), checkType(traceType)));
+        return controlExpressionNode(myNode, traceType);
     }
 
     /**
      * PrefixExpression:
      *	PrefixOperator Expression
      */
-    private ASTNode visit(PrefixExpression node, int type) {
+    private ASTNode visit(PrefixExpression node, int traceType) {
         PrefixExpression myNode = (PrefixExpression) TraceUtil.copyNode(node);
-        myNode.setOperand((Expression) process(node.getOperand(), checkType(type)));
-        return controlExpressionNode(myNode, type);
+        myNode.setOperand((Expression) process(node.getOperand(), checkType(traceType)));
+        return controlExpressionNode(myNode, traceType);
     }
 
     /**
@@ -693,33 +702,36 @@ public class InstrumentationParser {
      *    Identifier ( [ Expression { , Expression } ] )
      */
     @SuppressWarnings("unchecked")
-    private ASTNode visit(SuperMethodInvocation node, int type) {
+    private ASTNode visit(SuperMethodInvocation node, int traceType) {
         SuperMethodInvocation myNode = (SuperMethodInvocation) TraceUtil.copyNode(node);
 
         ArrayList<ASTNode> arguments = new ArrayList<>();
         for (Object object : node.arguments())
-            arguments.add(process((ASTNode) object, checkType(type)));
+            arguments.add(process((ASTNode) object, checkType(traceType)));
         myNode.arguments().clear();
         myNode.arguments().addAll(arguments);
 
-        return controlExpressionNode(myNode, type);
+        return controlExpressionNode(myNode, traceType);
     }
 
     /**
      * Assignment:
      *      Expression AssignmentOperator Expression
      */
-    private ASTNode visit(Assignment node, int type) {
+    private ASTNode visit(Assignment node, int traceType) {
         Assignment myNode = (Assignment) TraceUtil.copyNode(node);
 
-        myNode.setLeftHandSide((Expression) process(node.getLeftHandSide(), checkType(type)));
+        myNode.setLeftHandSide((Expression) process(node.getLeftHandSide(), checkType(traceType)));
 
+        Expression expression = (Expression) process(node.getRightHandSide(), checkType(traceType));
+        Type type = TraceUtil.typeFromBinding(node.getRightHandSide().resolveTypeBinding());
+        if ((type == null) || (type instanceof WildcardType))
+            type = TraceUtil.typeFromBinding(node.getLeftHandSide().resolveTypeBinding());
         int line = _unit.getLineNumber(node.getStartPosition());
         int column = _unit.getColumnNumber(node.getStartPosition());
-        Expression expression = (Expression) process(node.getRightHandSide(), checkType(type));
-        myNode.setRightHandSide(TraceUtil.genAssignExpression(expression, line, column));
+        myNode.setRightHandSide(TraceUtil.genAssignExpression(expression, (Type) TraceUtil.copyNode(type), line, column));
 
-        return controlExpressionNode(myNode, type);
+        return controlExpressionNode(myNode, traceType);
     }
 
     //-----------------------Declaration---------------------------
@@ -727,17 +739,20 @@ public class InstrumentationParser {
      * { ExtendedModifier } Type {Annotation} [ ... ] Identifier { Dimension } [ = Expression ]
      * "..." should not be appear since it is only used in method declarations
      */
-    private ASTNode visit(SingleVariableDeclaration node, int type) {
+    private ASTNode visit(SingleVariableDeclaration node, int traceType) {
         SingleVariableDeclaration myNode = (SingleVariableDeclaration) TraceUtil.copyNode(node);
 
         int line = _unit.getLineNumber(node.getStartPosition());
         int column = _unit.getColumnNumber(node.getStartPosition());
-        if (type == TraceUtil.TRACE_TYPE_ENTRY)
+        if (traceType == TraceUtil.TRACE_TYPE_ENTRY)
             return TraceUtil.genEntryStatement(node.getName(), line, column);
 
         if (node.getInitializer() != null) {
-            Expression expression = (Expression) process(node.getInitializer(), type);
-            myNode.setInitializer(TraceUtil.genAssignExpression(expression, line, column));
+            Expression expression = (Expression) process(node.getInitializer(), traceType);
+            Type type = TraceUtil.typeFromBinding(node.getInitializer().resolveTypeBinding());
+            if ((type == null) || (type instanceof WildcardType))
+                type = node.getType();
+            myNode.setInitializer(TraceUtil.genAssignExpression(expression, (Type) TraceUtil.copyNode(type), line, column));
         }
 
         return myNode;
@@ -749,12 +764,13 @@ public class InstrumentationParser {
      *	    { , VariableDeclarationFragment }
      */
     @SuppressWarnings("unchecked")
-    private ASTNode visit(VariableDeclarationExpression node, int type) {
+    private ASTNode visit(VariableDeclarationExpression node, int traceType) {
         VariableDeclarationExpression myNode = (VariableDeclarationExpression) TraceUtil.copyNode(node);
+        _declType = node.getType();
 
         ArrayList<ASTNode> fragments = new ArrayList<>();
         for (Object object : node.fragments())
-            fragments.add(process((ASTNode) object, type));
+            fragments.add(process((ASTNode) object, traceType));
         myNode.fragments().clear();
         myNode.fragments().addAll(fragments);
 
@@ -765,14 +781,17 @@ public class InstrumentationParser {
      * VariableDeclarationFragment:
      *	Identifier { Dimension } [ = Expression ]
      */
-    private ASTNode visit(VariableDeclarationFragment node, int type) {
+    private ASTNode visit(VariableDeclarationFragment node, int traceType) {
         VariableDeclarationFragment myNode = (VariableDeclarationFragment) TraceUtil.copyNode(node);
 
         if (node.getInitializer() != null){
             int line = _unit.getLineNumber(node.getStartPosition());
             int column = _unit.getColumnNumber(node.getStartPosition());
-            Expression expression = (Expression) process(node.getInitializer(), type);
-            myNode.setInitializer(TraceUtil.genAssignExpression(expression, line, column));
+            Expression expression = (Expression) process(node.getInitializer(), traceType);
+            Type type = TraceUtil.typeFromBinding(node.getInitializer().resolveTypeBinding());
+            if ((type == null) || (type instanceof WildcardType))
+                type = _declType;
+            myNode.setInitializer(TraceUtil.genAssignExpression(expression, (Type) TraceUtil.copyNode(type), line, column));
         }
 
         return myNode;
@@ -783,7 +802,7 @@ public class InstrumentationParser {
      * FieldAccess:
      *           Expression . Identifier
      */
-    private ASTNode visit(FieldAccess node, int type) {
+    private ASTNode visit(FieldAccess node, int traceType) {
         return TraceUtil.copyNode(node);
     }
 
@@ -792,7 +811,7 @@ public class InstrumentationParser {
      *	SimpleName
      *	QualifiedName
      */
-    private ASTNode visit(Name node, int type) {
+    private ASTNode visit(Name node, int traceType) {
         return TraceUtil.copyNode(node);
     }
 
@@ -800,7 +819,7 @@ public class InstrumentationParser {
      * SuperFieldAccess:
      *	[ ClassName . ] super . Identifier
      */
-    private ASTNode visit(SuperFieldAccess node, int type) {
+    private ASTNode visit(SuperFieldAccess node, int traceType) {
         return TraceUtil.copyNode(node);
     }
 
@@ -809,35 +828,35 @@ public class InstrumentationParser {
      * BooleanLiteral:
      *      true false
      */
-    private ASTNode visit(BooleanLiteral node, int type) {
+    private ASTNode visit(BooleanLiteral node, int traceType) {
         return TraceUtil.copyNode(node);
     }
 
     /**
      * Character literal nodes.
      */
-    private ASTNode visit(CharacterLiteral node, int type) {
+    private ASTNode visit(CharacterLiteral node, int traceType) {
         return TraceUtil.copyNode(node);
     }
 
     /**
      * Null literal node.
      */
-    private ASTNode visit(NullLiteral node, int type) {
+    private ASTNode visit(NullLiteral node, int traceType) {
         return TraceUtil.copyNode(node);
     }
 
     /**
      * Number literal node.
      */
-    private ASTNode visit(NumberLiteral node, int type) {
+    private ASTNode visit(NumberLiteral node, int traceType) {
         return TraceUtil.copyNode(node);
     }
 
     /**
      * String literal nodes.
      */
-    private ASTNode visit(StringLiteral node, int type) {
+    private ASTNode visit(StringLiteral node, int traceType) {
         return TraceUtil.copyNode(node);
     }
 
@@ -845,7 +864,7 @@ public class InstrumentationParser {
      * TypeLiteral:
      *	( Type | void ) . class
      */
-    private ASTNode visit(TypeLiteral node, int type) {
+    private ASTNode visit(TypeLiteral node, int traceType) {
         return TraceUtil.copyNode(node);
     }
 
@@ -853,7 +872,7 @@ public class InstrumentationParser {
      * ThisExpression:
      *	[ ClassName . ] this
      */
-    private ASTNode visit(ThisExpression node, int type) {
+    private ASTNode visit(ThisExpression node, int traceType) {
         return TraceUtil.copyNode(node);
     }
 
@@ -864,7 +883,7 @@ public class InstrumentationParser {
      *          [ < Type { , Type } > ]
      *      new
      */
-    private ASTNode visit(CreationReference node, int type) {
+    private ASTNode visit(CreationReference node, int traceType) {
         return TraceUtil.copyNode(node);
     }
 
@@ -874,7 +893,7 @@ public class InstrumentationParser {
      *	    [ < Type { , Type } > ]
      *	    Identifier
      */
-    private ASTNode visit(ExpressionMethodReference node, int type) {
+    private ASTNode visit(ExpressionMethodReference node, int traceType) {
         return TraceUtil.copyNode(node);
     }
 
@@ -885,7 +904,7 @@ public class InstrumentationParser {
      *	SuperMethodReference
      *	TypeMethodReference
      */
-    private ASTNode visit(MethodReference node, int type) {
+    private ASTNode visit(MethodReference node, int traceType) {
         return TraceUtil.copyNode(node);
     }
 
@@ -895,7 +914,7 @@ public class InstrumentationParser {
      *	    [ < Type { , Type } > ]
      *	    Identifier
      */
-    private ASTNode visit(SuperMethodReference node, int type) {
+    private ASTNode visit(SuperMethodReference node, int traceType) {
         return TraceUtil.copyNode(node);
     }
 
@@ -905,7 +924,7 @@ public class InstrumentationParser {
      *	    [ < Type { , Type } > ]
      *	    Identifier
      */
-    private ASTNode visit(TypeMethodReference node, int type) {
+    private ASTNode visit(TypeMethodReference node, int traceType) {
         return TraceUtil.copyNode(node);
     }
 
@@ -919,128 +938,128 @@ public class InstrumentationParser {
         return process(node, TraceUtil.TRACE_TYPE_NONE);
     }
 
-    private ASTNode process(ASTNode node, int type) {
+    private ASTNode process(ASTNode node, int traceType) {
         if (node == null) {
             return null;
         }
         if (node instanceof AssertStatement) {
-            return visit((AssertStatement) node, type);
+            return visit((AssertStatement) node, traceType);
         } else if (node instanceof Block) {
-            return visit((Block) node, type);
+            return visit((Block) node, traceType);
         } else if (node instanceof BreakStatement) {
-            return visit((BreakStatement) node, type);
+            return visit((BreakStatement) node, traceType);
         } else if (node instanceof ConstructorInvocation) {
-            return visit((ConstructorInvocation) node, type);
+            return visit((ConstructorInvocation) node, traceType);
         } else if (node instanceof ContinueStatement) {
-            return visit((ContinueStatement) node, type);
+            return visit((ContinueStatement) node, traceType);
         } else if (node instanceof DoStatement) {
-            return visit((DoStatement) node, type);
+            return visit((DoStatement) node, traceType);
         } else if (node instanceof EmptyStatement) {
-            return visit((EmptyStatement) node, type);
+            return visit((EmptyStatement) node, traceType);
         } else if (node instanceof EnhancedForStatement) {
-            return visit((EnhancedForStatement) node, type);
+            return visit((EnhancedForStatement) node, traceType);
         } else if (node instanceof ExpressionStatement) {
-            return visit((ExpressionStatement) node, type);
+            return visit((ExpressionStatement) node, traceType);
         } else if (node instanceof ForStatement) {
-            return visit((ForStatement) node, type);
+            return visit((ForStatement) node, traceType);
         } else if (node instanceof IfStatement) {
-            return visit((IfStatement) node, type);
+            return visit((IfStatement) node, traceType);
         } else if (node instanceof LabeledStatement) {
-            return visit((LabeledStatement) node, type);
+            return visit((LabeledStatement) node, traceType);
         } else if (node instanceof ReturnStatement) {
-            return visit((ReturnStatement) node, type);
+            return visit((ReturnStatement) node, traceType);
         } else if (node instanceof SuperConstructorInvocation) {
-            return visit((SuperConstructorInvocation) node, type);
+            return visit((SuperConstructorInvocation) node, traceType);
         } else if (node instanceof SwitchCase) {
-            return visit((SwitchCase) node, type);
+            return visit((SwitchCase) node, traceType);
         } else if (node instanceof SwitchStatement) {
-            return visit((SwitchStatement) node, type);
+            return visit((SwitchStatement) node, traceType);
         } else if (node instanceof SynchronizedStatement) {
-            return visit((SynchronizedStatement) node, type);
+            return visit((SynchronizedStatement) node, traceType);
         } else if (node instanceof ThrowStatement) {
-            return visit((ThrowStatement) node, type);
+            return visit((ThrowStatement) node, traceType);
         } else if (node instanceof TryStatement) {
-            return visit((TryStatement) node, type);
+            return visit((TryStatement) node, traceType);
         } else if (node instanceof TypeDeclarationStatement) {
-            return visit((TypeDeclarationStatement) node, type);
+            return visit((TypeDeclarationStatement) node, traceType);
         } else if (node instanceof VariableDeclarationStatement) {
-            return visit((VariableDeclarationStatement) node, type);
+            return visit((VariableDeclarationStatement) node, traceType);
         } else if (node instanceof WhileStatement) {
-            return visit((WhileStatement) node, type);
+            return visit((WhileStatement) node, traceType);
         } else if (node instanceof Annotation) {
-            return visit((Annotation) node, type);
+            return visit((Annotation) node, traceType);
         } else if (node instanceof ArrayAccess) {
-            return visit((ArrayAccess) node, type);
+            return visit((ArrayAccess) node, traceType);
         } else if (node instanceof ArrayCreation) {
-            return visit((ArrayCreation) node, type);
+            return visit((ArrayCreation) node, traceType);
         } else if (node instanceof ArrayInitializer) {
-            return visit((ArrayInitializer) node, type);
+            return visit((ArrayInitializer) node, traceType);
         } else if (node instanceof Assignment) {
-            return visit((Assignment) node, type);
+            return visit((Assignment) node, traceType);
         } else if (node instanceof BooleanLiteral) {
-            return visit((BooleanLiteral) node, type);
+            return visit((BooleanLiteral) node, traceType);
         } else if (node instanceof CastExpression) {
-            return visit((CastExpression) node, type);
+            return visit((CastExpression) node, traceType);
         } else if (node instanceof CharacterLiteral) {
-            return visit((CharacterLiteral) node, type);
+            return visit((CharacterLiteral) node, traceType);
         } else if (node instanceof ClassInstanceCreation) {
-            return visit((ClassInstanceCreation) node, type);
+            return visit((ClassInstanceCreation) node, traceType);
         } else if (node instanceof ConditionalExpression) {
-            return visit((ConditionalExpression) node, type);
+            return visit((ConditionalExpression) node, traceType);
         } else if (node instanceof CreationReference) {
-            return visit((CreationReference) node, type);
+            return visit((CreationReference) node, traceType);
         } else if (node instanceof ExpressionMethodReference) {
-            return visit((ExpressionMethodReference) node, type);
+            return visit((ExpressionMethodReference) node, traceType);
         } else if (node instanceof FieldAccess) {
-            return visit((FieldAccess) node, type);
+            return visit((FieldAccess) node, traceType);
         } else if (node instanceof InfixExpression) {
-            return visit((InfixExpression) node, type);
+            return visit((InfixExpression) node, traceType);
         } else if (node instanceof InstanceofExpression) {
-            return visit((InstanceofExpression) node, type);
+            return visit((InstanceofExpression) node, traceType);
         } else if (node instanceof LambdaExpression) {
-            return visit((LambdaExpression) node, type);
+            return visit((LambdaExpression) node, traceType);
         } else if (node instanceof MethodInvocation) {
-            return visit((MethodInvocation) node, type);
+            return visit((MethodInvocation) node, traceType);
         } else if (node instanceof MethodReference) {
-            return visit((MethodReference) node, type);
+            return visit((MethodReference) node, traceType);
         } else if (node instanceof Name) {
-            return visit((Name) node, type);
+            return visit((Name) node, traceType);
         } else if (node instanceof NullLiteral) {
-            return visit((NullLiteral) node, type);
+            return visit((NullLiteral) node, traceType);
         } else if (node instanceof NumberLiteral) {
-            return visit((NumberLiteral) node, type);
+            return visit((NumberLiteral) node, traceType);
         } else if (node instanceof ParenthesizedExpression) {
-            return visit((ParenthesizedExpression) node, type);
+            return visit((ParenthesizedExpression) node, traceType);
         } else if (node instanceof PostfixExpression) {
-            return visit((PostfixExpression) node, type);
+            return visit((PostfixExpression) node, traceType);
         } else if (node instanceof PrefixExpression) {
-            return visit((PrefixExpression) node, type);
+            return visit((PrefixExpression) node, traceType);
         } else if (node instanceof StringLiteral) {
-            return visit((StringLiteral) node, type);
+            return visit((StringLiteral) node, traceType);
         } else if (node instanceof SuperFieldAccess) {
-            return visit((SuperFieldAccess) node, type);
+            return visit((SuperFieldAccess) node, traceType);
         } else if (node instanceof SuperMethodInvocation) {
-            return visit((SuperMethodInvocation) node, type);
+            return visit((SuperMethodInvocation) node, traceType);
         } else if (node instanceof SuperMethodReference) {
-            return visit((SuperMethodReference) node, type);
+            return visit((SuperMethodReference) node, traceType);
         } else if (node instanceof ThisExpression) {
-            return visit((ThisExpression) node, type);
+            return visit((ThisExpression) node, traceType);
         } else if (node instanceof TypeLiteral) {
-            return visit((TypeLiteral) node, type);
+            return visit((TypeLiteral) node, traceType);
         } else if (node instanceof TypeMethodReference) {
-            return visit((TypeMethodReference) node, type);
+            return visit((TypeMethodReference) node, traceType);
         } else if (node instanceof VariableDeclarationExpression) {
-            return visit((VariableDeclarationExpression) node, type);
+            return visit((VariableDeclarationExpression) node, traceType);
         } else if (node instanceof AnonymousClassDeclaration) {
-            return visit((AnonymousClassDeclaration) node, type);
+            return visit((AnonymousClassDeclaration) node, traceType);
         } else if (node instanceof VariableDeclarationFragment) {
-            return visit((VariableDeclarationFragment) node, type);
+            return visit((VariableDeclarationFragment) node, traceType);
         } else if (node instanceof SingleVariableDeclaration) {
-            return visit((SingleVariableDeclaration) node, type);
+            return visit((SingleVariableDeclaration) node, traceType);
         } else if (node instanceof MethodDeclaration) {
-            return visit((MethodDeclaration) node, type);
+            return visit((MethodDeclaration) node, traceType);
         } else if (node instanceof CatchClause) {
-            return visit((CatchClause) node, type);
+            return visit((CatchClause) node, traceType);
         } else {
             LevelLogger.error("UNKNOWN ASTNode type : " + node.toString());
             return null;
