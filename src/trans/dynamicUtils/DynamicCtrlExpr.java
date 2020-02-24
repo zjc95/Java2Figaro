@@ -23,7 +23,10 @@ public class DynamicCtrlExpr extends DynamicMsg {
         for (VarNode var : ctrl.getUseList()) {
             FieldRelation relation = _info.genFieldRelation(var);
             if (relation != null) _relationList.add(relation);
-            _useIDMap.put(var.getID(), _info.genVarFigaroID(var, false));
+
+            String varFigaroID = _info.genVarFigaroID(var, false);
+            if (varFigaroID != null)
+                _useIDMap.put(var.getID(), varFigaroID);
         }
         _info.addCtrlExpr(this);
     }

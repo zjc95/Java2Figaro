@@ -19,13 +19,13 @@ public class TraceParser {
     }
 
     @SuppressWarnings("unchecked")
-    public static String Analyze(String srcFile) {
+    public static String Analyze(String srcFile, String methodName) {
         CompilationUnit srcUnit = genASTFromSource(srcFile, null);
         if (srcUnit == null)
             return "";
 
         MethodVisitor methodVisitor = new MethodVisitor();
-        methodVisitor.init(srcUnit);
+        methodVisitor.init(srcUnit, methodName);
         TraceUtil.init(srcUnit.getAST());
         srcUnit.accept(methodVisitor);
 

@@ -31,6 +31,30 @@ public class StaticParser {
         return info;
     }
 
+    public static StaticInfo Analyze(String srcFile, String methodName) {
+        String source = Util.readFileToString(srcFile);
+        ASTParser astParser = ASTParser.newParser(Util.JAVA_LEVEL);
+        astParser.setSource(source.toCharArray());
+        CompilationUnit srcUnit = (CompilationUnit) astParser.createAST(null);
+
+        MethodDeclCollector methodDeclCollector = new MethodDeclCollector();
+        methodDeclCollector.init();
+        srcUnit.accept(methodDeclCollector);
+        List<MethodDeclaration> srcMethods = methodDeclCollector.getAllMethDecl();
+
+        StaticInfo info = new StaticInfo();
+
+        for (MethodDeclaration sm : srcMethods)
+            if (sm.getName().getIdentifier().equals(methodName)) {
+                SourceParser parser = new SourceParser(srcUnit, info);
+                parser.process(sm);
+            }
+
+        info.build();
+        LevelLogger.debug(info.AnalyzeInformation());
+        return info;
+    }
+
     static class MethodDeclCollector extends ASTVisitor {
 
         List<MethodDeclaration> methodDeclarations;

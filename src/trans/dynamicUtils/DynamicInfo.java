@@ -16,10 +16,20 @@ import java.util.Map;
 public class DynamicInfo {
     private StaticInfo _stcInfo;
     private JSONObject _json;
+    private ArrayList<String> _exEntry = new ArrayList<>();
+    private ArrayList<String> _exRet = new ArrayList<>();
 
     DynamicInfo(StaticInfo stcInfo, JSONObject json) {
         _stcInfo = stcInfo;
         _json = json;
+    }
+
+
+    DynamicInfo(StaticInfo stcInfo, JSONObject json, ArrayList<String> exEntry, ArrayList<String> exRet) {
+        _stcInfo = stcInfo;
+        _json = json;
+        _exEntry.addAll(exEntry);
+        _exRet.addAll(exRet);
     }
     
     /***************Dynamic Inform Parse*********************/
@@ -33,6 +43,10 @@ public class DynamicInfo {
     private ArrayList<Pair<String, Double>> _varObservation = new ArrayList<>();
 
     void parse() {
+        for (String str : _exEntry) {
+            _msgList.add(new DynamicEntry(this, str));
+        }
+
         JSONArray data = (JSONArray) _json.get("data");
         for (Object obj : data) {
             JSONObject jsonMsg = (JSONObject) obj;
@@ -43,8 +57,13 @@ public class DynamicInfo {
             addMessage(line.intValue(), column.intValue(), type, value);
         }
 
+        if (!(_msgList.get(_msgList.size()-1) instanceof DynamicRet)) {
+            _msgList.add(new DynamicRet(this, _exRet));
+        }
+
         for (DynamicMsg msg : _msgList)
             msg.parse();
+
 
         Strategy stgGather = new Strategy();
         stgGather.init();
@@ -75,15 +94,21 @@ public class DynamicInfo {
                     LevelLogger.error("JSON INFORMATION RET NOT FOUND : line " + line + ", column " + column);
                 if (!(value instanceof String))
                     LevelLogger.error("JSON INFORMATION ASSIGN VALUE ERROR : line " + line + ", column " + column);
-                _msgList.add(new DynamicRet(this, line, column, ret, (String)value));
+                _msgList.add(new DynamicRet(this, line, column, ret, (String)value, _exRet));
                 break;
             case "CONTROL":
                 ControlExpression ctrl = _stcInfo.getCtrlExpr(line, column);
                 if (ctrl == null)
                     LevelLogger.error("JSON INFORMATION CONTROL EXPRESSION NOT FOUND : line " + line + ", column " + column);
-                if (!(value instanceof Boolean))
+                if (!(value instanceof String))
                     LevelLogger.error("JSON INFORMATION CONTROL EXPRESSION VALUE ERROR : line " + line + ", column " + column);
-                _msgList.add(new DynamicCtrlExpr(this, line, column, ctrl, (boolean)value));
+                try {
+                    boolean valueBoolean = Boolean.parseBoolean((String) value);
+                    _msgList.add(new DynamicCtrlExpr(this, line, column, ctrl, valueBoolean));
+                } catch (NumberFormatException e) {
+                    LevelLogger.error("JSON INFORMATION CONTROL EXPRESSION VALUE ERROR : line " + line + ", column " + column);
+                    e.printStackTrace();
+                }
                 break;
             case "STMT":
                 Stmt stmt = _stcInfo.getStmt(line, column);
@@ -109,8 +134,10 @@ public class DynamicInfo {
             }
         }
         else {
-            if (!isDef)
+            if (!isDef) {
                 LevelLogger.error("Error : Use Without Define : " + varID);
+                return null;
+            }
             _varDefTime.put(varName, 0);
         }
 

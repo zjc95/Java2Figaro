@@ -8,7 +8,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 
 public class Dumper {
-    private static String OUT_FILE_NAME = "D:\\program\\workspace\\Java2Figaro\\resources\\DumpResult.json";
+    private static String OUT_FILE_NAME = "D:\\program\\workspace\\Java2Figaro\\resources\\test\\DumpResult.json";
     private static JSONArray _result  = new JSONArray();
 
     @SuppressWarnings("unchecked")
@@ -37,7 +37,7 @@ public class Dumper {
         File file = new File(OUT_FILE_NAME);
         BufferedWriter bufferedWriter = null;
         try {
-            bufferedWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file, true), StandardCharsets.UTF_8));
+            bufferedWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file, false), StandardCharsets.UTF_8));
             bufferedWriter.write(genOutString());
             bufferedWriter.write("\n");
             bufferedWriter.close();

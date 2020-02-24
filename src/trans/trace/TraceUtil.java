@@ -48,6 +48,13 @@ public class TraceUtil {
         return genCastExpression(methodInvocation, type);
     }
 
+    static Statement genWriteStatement() {
+        MethodInvocation methodInvocation = _ast.newMethodInvocation();
+        methodInvocation.setExpression(_ast.newName("trans.trace.Dumper"));
+        methodInvocation.setName(_ast.newSimpleName("write"));
+        return _ast.newExpressionStatement(methodInvocation);
+    }
+
     @SuppressWarnings("unchecked")
     static Expression genReturnExpression(Expression expression, Type type, int line, int column) {
         MethodInvocation methodInvocation = _ast.newMethodInvocation();

@@ -15,7 +15,6 @@ class testParser {
     return trans.trace.Dumper.dump(ret,4,14,2);
   }
   public static void main(  String args[]){
-    trans.trace.Dumper.dump(args,3,17,25);
     System.out.println(func(1,4));
   }
 }

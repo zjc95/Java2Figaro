@@ -9,15 +9,23 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class DynamicRet extends DynamicMsg {
-    private String _value;
+    private String _value = null;
     private DynamicStmt _structure = null;
     private Map<String, String> _useIDMap = new HashMap<>();
     private ArrayList<FieldRelation> _relationList = new ArrayList<>();
+    private ArrayList<String> _exRet;
 
-    DynamicRet(DynamicInfo info, int line, int column, Stmt stmt, String value) {
+    DynamicRet(DynamicInfo info, int line, int column, Stmt stmt, String value, ArrayList<String> exRet) {
         super(info, line, column, stmt);
         _value = value;
         _figaroID = "Ret";
+        _exRet = exRet;
+    }
+
+    DynamicRet(DynamicInfo info, ArrayList<String> exRet) {
+        super(info, 0, 0, null);
+        _figaroID = "Ret";
+        _exRet = exRet;
     }
 
     private DynamicStmt getStructure(Stmt stmt) {
@@ -32,13 +40,28 @@ public class DynamicRet extends DynamicMsg {
     }
 
     void parse() {
-        Stmt stmt = (Stmt) _msg;
-        for (VarNode var : stmt.getUseList()) {
+        if (_msg != null) {
+            Stmt stmt = (Stmt) _msg;
+            for (VarNode var : stmt.getUseList()) {
+                FieldRelation relation = _info.genFieldRelation(var);
+                if (relation != null) _relationList.add(relation);
+
+                String varFigaroID = _info.genVarFigaroID(var, false);
+                if (varFigaroID != null)
+                    _useIDMap.put(var.getID(), varFigaroID);
+            }
+            _structure = getStructure(stmt);
+        }
+
+        for (String varID : _exRet) {
+            VarNode var = new VarNode(varID);
             FieldRelation relation = _info.genFieldRelation(var);
             if (relation != null) _relationList.add(relation);
-            _useIDMap.put(var.getID(), _info.genVarFigaroID(var, false));
+
+            String varFigaroID = _info.genVarFigaroID(var, false);
+            if (varFigaroID != null)
+                _useIDMap.put(var.getID(), varFigaroID);
         }
-        _structure = getStructure(stmt);
     }
 
     String genSource() {

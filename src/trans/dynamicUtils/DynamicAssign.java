@@ -45,7 +45,10 @@ public class DynamicAssign extends DynamicMsg {
         for (VarNode var : assign.getUseList()) {
             FieldRelation relation = _info.genFieldRelation(var);
             if (relation != null) _relationList.add(relation);
-            _useIDMap.put(var.getID(), _info.genVarFigaroID(var, false));
+
+            String varFigaroID = _info.genVarFigaroID(var, false);
+            if (varFigaroID != null)
+                _useIDMap.put(var.getID(), varFigaroID);
         }
         _figaroID = _info.genVarFigaroID(assign.getDef(), true);
         _info.addFieldRelation(assign.getDef());

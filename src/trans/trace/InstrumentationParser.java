@@ -13,6 +13,7 @@ public class InstrumentationParser {
 
     /************************** Visit MethodDeclaration ***********************/
 
+    @SuppressWarnings("unchecked")
     private ASTNode visit(MethodDeclaration node, int traceType) {
         if(node.getReturnType2() != null)
             _retType = TraceUtil.typeFromBinding(node.getReturnType2().resolveBinding());
@@ -25,6 +26,10 @@ public class InstrumentationParser {
         if (body != null) {
             Block newBody = (Block) process(body, traceType);
             node.setBody(TraceUtil.genBlock(params, newBody));
+        }
+
+        if (node.getReturnType2().toString().equals("void")) {
+            node.getBody().statements().add(TraceUtil.genWriteStatement());
         }
         return node;
     }
@@ -143,6 +148,7 @@ public class InstrumentationParser {
      * ReturnStatement:
      *	return [ Expression ] ;
      */
+    @SuppressWarnings("unchecked")
     private ASTNode visit(ReturnStatement node, int traceType) {
         ReturnStatement myNode = (ReturnStatement) TraceUtil.copyNode(node);
         if (node.getExpression() != null)
@@ -153,8 +159,15 @@ public class InstrumentationParser {
             Type type = TraceUtil.typeFromBinding(node.getExpression().resolveTypeBinding());
             if ((type == null) || (type instanceof WildcardType)) type = _retType;
             myNode.setExpression(TraceUtil.genReturnExpression(expression, (Type) TraceUtil.copyNode(type), line, column));
+            return myNode;
         }
-        return myNode;
+        else {
+            Statement writeStatement = TraceUtil.genWriteStatement();
+            Block block = TraceUtil.genBlock();
+            block.statements().add(writeStatement);
+            block.statements().add(myNode);
+            return block;
+        }
     }
 
     /**
@@ -622,7 +635,10 @@ public class InstrumentationParser {
             myNode.extendedOperands().addAll(extendedOperands);
         }
 
-        return controlExpressionNode(myNode, traceType);
+        if (typeNow != traceType)
+            return controlExpressionNode(myNode, traceType);
+        else
+            return myNode;
     }
 
     /**

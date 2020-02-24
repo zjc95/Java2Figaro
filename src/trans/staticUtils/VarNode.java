@@ -14,7 +14,7 @@ public class VarNode {
         return varID.replace('.', '_');
     }
 
-    VarNode(String varID) {
+    public VarNode(String varID) {
         _id = varID;
         _name = transID2Name(varID);
     }
