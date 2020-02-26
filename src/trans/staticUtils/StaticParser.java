@@ -32,10 +32,9 @@ public class StaticParser {
     }
 
     public static StaticInfo Analyze(String srcFile, String methodName) {
-        String source = Util.readFileToString(srcFile);
-        ASTParser astParser = ASTParser.newParser(Util.JAVA_LEVEL);
-        astParser.setSource(source.toCharArray());
-        CompilationUnit srcUnit = (CompilationUnit) astParser.createAST(null);
+        CompilationUnit srcUnit = Util.genASTFromSource(srcFile, null);
+        if (srcUnit == null)
+            return null;
 
         MethodDeclCollector methodDeclCollector = new MethodDeclCollector();
         methodDeclCollector.init();

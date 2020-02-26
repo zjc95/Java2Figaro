@@ -472,7 +472,7 @@ public class InstrumentationParser {
         Block block = (Block) process(node.getBody(), TraceUtil.TRACE_TYPE_NONE);
 
         ArrayList<ASTNode> statements = new ArrayList<>();
-        statements.add(_tryCtrlStmt);
+        statements.add(TraceUtil.copyNode(_tryCtrlStmt));
         statements.add(statement);
         statements.add(entryStatement);
         myNode.setBody(TraceUtil.genBlock(statements, block));

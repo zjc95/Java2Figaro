@@ -12,6 +12,7 @@ public class Strategy {
     public void init() {
         _stgList.add(new StrategyOdevity());
         _stgList.add(new StrategyPositive());
+        _stgList.add(new StrategyEquals());
     }
 
     public ArrayList<Pair<String, Double>> parse(ArrayList<DynamicMsg> msgList) {

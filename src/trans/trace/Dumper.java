@@ -3,12 +3,12 @@ package trans.trace;
 import org.json.simple.*;
 import org.json.simple.JSONArray;
 import trans.common.LevelLogger;
+import trans.common.Util;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 
 public class Dumper {
-    private static String OUT_FILE_NAME = "D:\\program\\workspace\\Java2Figaro\\resources\\test\\DumpResult.json";
     private static JSONArray _result  = new JSONArray();
 
     @SuppressWarnings("unchecked")
@@ -34,7 +34,7 @@ public class Dumper {
     }
 
     public static void write() {
-        File file = new File(OUT_FILE_NAME);
+        File file = new File(System.getProperty("user.dir") + "\\DumpResult.json");
         BufferedWriter bufferedWriter = null;
         try {
             bufferedWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file, false), StandardCharsets.UTF_8));

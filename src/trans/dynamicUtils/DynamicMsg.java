@@ -1,5 +1,6 @@
 package trans.dynamicUtils;
 
+import org.eclipse.jdt.core.dom.ASTNode;
 import trans.staticUtils.StaticMsg;
 
 public class DynamicMsg {
@@ -14,6 +15,12 @@ public class DynamicMsg {
         _line = line;
         _column = column;
         _msg = msg;
+    }
+
+    public ASTNode getNode() {
+        if (_msg == null)
+            return null;
+        return _msg.getNode();
     }
 
     int getLine() {

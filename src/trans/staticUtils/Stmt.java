@@ -8,19 +8,13 @@ import java.util.Map;
 
 public class Stmt extends StaticMsg {
     private Stmt _structure;
-    private ASTNode _node;
     private ArrayList<Assign> _assignList = new ArrayList<>();
     private ArrayList<ControlExpression> _controlExprList = new ArrayList<>();
     private Map<String, VarNode> _useList = new HashMap<>();
 
     Stmt(ASTNode node, Stmt structure, int line, int column) {
-        super(line, column);
-        _node = node;
+        super(line, column, node);
         _structure = structure;
-    }
-
-    ASTNode getNode() {
-        return _node;
     }
 
     void addAssign(Assign assign) {

@@ -248,7 +248,9 @@ class SourceParser {
         Stmt stmt = new Stmt(node, context.getStructure(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
         _info.addStatement(stmt);
 
-        Assign assign = new Assign(context.getStmt(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
+        int line = _unit.getLineNumber(node.getStartPosition());
+        int column = _unit.getColumnNumber(node.getStartPosition());
+        Assign assign = new Assign(context.getStmt(), line, column, node);
         Context contextExpr = context.newStmtContext(stmt, VARIABLE_TYPE_USE);
 
         process(node.getParameter(), contextExpr.newAssignContext(assign, VARIABLE_TYPE_DEF));
@@ -377,7 +379,9 @@ class SourceParser {
 
     private Context checkCondition(ASTNode node, Context context) {
         if (!context.checkControl()) return context;
-        ControlExpression control = new ControlExpression(_unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
+        int line = _unit.getLineNumber(node.getStartPosition());
+        int column = _unit.getColumnNumber(node.getStartPosition());
+        ControlExpression control = new ControlExpression(line, column, node);
         context.getStmt().addControlExpr(control);
         return context.newControlContext(control);
     }
@@ -576,10 +580,15 @@ class SourceParser {
      */
     private Stmt visit(Assignment node, Context context) {
         context = checkCondition(node, context);
-        Assign assign = new Assign(context.getStmt(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
+        int line = _unit.getLineNumber(node.getStartPosition());
+        int column = _unit.getColumnNumber(node.getStartPosition());
+        Assign assign = new Assign(context.getStmt(), line, column, node);
 
         process(node.getLeftHandSide(), context.newAssignContext(assign, VARIABLE_TYPE_DEF));
         process(node.getRightHandSide(), context.newAssignContext(assign, VARIABLE_TYPE_USE));
+
+        if (!(node.getOperator().toString().equals("=")))
+            assign.addUse(assign.getDef());
 
         if ((context.getAssign() != null) && (context.getType() == VARIABLE_TYPE_USE))
             context.getAssign().addUse(assign.getDef());
@@ -592,7 +601,9 @@ class SourceParser {
      * "..." should not be appear since it is only used in method declarations
      */
     private Stmt visit(SingleVariableDeclaration node, Context context) {
-        Assign assign = new Assign(context.getStmt(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
+        int line = _unit.getLineNumber(node.getStartPosition());
+        int column = _unit.getColumnNumber(node.getStartPosition());
+        Assign assign = new Assign(context.getStmt(), line, column, node);
         process(node.getName(), context.newAssignContext(assign, VARIABLE_TYPE_DEF));
         if (node.getInitializer() != null)
             process(node.getInitializer(), context.newAssignContext(assign, VARIABLE_TYPE_USE));
@@ -615,7 +626,9 @@ class SourceParser {
      *	Identifier { Dimension } [ = Expression ]
      */
     private Stmt visit(VariableDeclarationFragment node, Context context) {
-        Assign assign = new Assign(context.getStmt(), _unit.getLineNumber(node.getStartPosition()), _unit.getColumnNumber(node.getStartPosition()));
+        int line = _unit.getLineNumber(node.getStartPosition());
+        int column = _unit.getColumnNumber(node.getStartPosition());
+        Assign assign = new Assign(context.getStmt(), line, column, node);
         process(node.getName(), context.newAssignContext(assign, VARIABLE_TYPE_DEF));
         if (node.getInitializer() != null)
             process(node.getInitializer(), context.newAssignContext(assign, VARIABLE_TYPE_USE));

@@ -237,6 +237,10 @@ public class DynamicInfo {
 
     /***************Figaro Source Generate*********************/
 
+    private static final double HIGH_PROBABILITY = 0.99;
+    private static final double LOW_PROBABILITY = 0.05;
+    private static final double CONSTANT_PROBABILITY = 0.7;
+
     public String genFigaroSource() {
         StringBuilder _source = new StringBuilder("");
 
@@ -273,7 +277,7 @@ public class DynamicInfo {
         _source.append("    //-------------Sampling--------------\n");
         _source.append("    val samplePatchValid = VariableElimination(Ret)\n");
         _source.append("    samplePatchValid.start()\n");
-        _source.append("    println(\"Probability of test:\" + samplePatchValid.probability(Ret, true))\n");
+        _source.append("    println(samplePatchValid.probability(Ret, true))\n");
         _source.append("    samplePatchValid.kill()\n");
         _source.append("  }\n");
         _source.append("}\n");
@@ -285,11 +289,11 @@ public class DynamicInfo {
         int size = useList.size();
         if (size == 0) {
             LevelLogger.warn("WARNING: Empty UseList : def " + def);
-            return "    val " + def + " = Flip(0.5)\n";
+            return "    val " + def + " = Flip( " + CONSTANT_PROBABILITY + ")\n";
         }
 
         if (size == 1)
-            return "    val " + def + " = If(" + useList.get(0) + ", Flip(0.95), Flip(0.05))\n";
+            return "    val " + def + " = If(" + useList.get(0) + ", Flip(" + HIGH_PROBABILITY + "), Flip(" + LOW_PROBABILITY +"))\n";
 
         StringBuilder source = new StringBuilder("    val " + def + " = RichCPD(");
         for (String use : useList)
@@ -299,12 +303,12 @@ public class DynamicInfo {
         source.append("      (" + "OneOf(true)");
         for (int i = 1; i < size; i++)
             source.append(", OneOf(true)");
-        source.append(") -> Flip(0.95),\n");
+        source.append(") -> Flip(" + HIGH_PROBABILITY + "),\n");
 
         source.append("      (" + "*");
         for (int i = 1; i < size; i++)
             source.append(", *");
-        source.append(") -> Flip(0.05))\n");
+        source.append(") -> Flip(" + LOW_PROBABILITY +"))\n");
 
         return source.toString();
     }

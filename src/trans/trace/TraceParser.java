@@ -20,7 +20,7 @@ public class TraceParser {
 
     @SuppressWarnings("unchecked")
     public static String Analyze(String srcFile, String methodName) {
-        CompilationUnit srcUnit = genASTFromSource(srcFile, null);
+        CompilationUnit srcUnit = Util.genASTFromSource(srcFile, null);
         if (srcUnit == null)
             return "";
 
@@ -33,35 +33,5 @@ public class TraceParser {
         srcUnit.imports().add(importDeclaration);
 
         return srcUnit.toString();
-    }
-
-    private static CompilationUnit genASTFromSource(String srcFile, String srcPath) {
-        String source = Util.readFileToString(srcFile);
-        if(source.isEmpty()) return null;
-
-        ASTParser astParser = ASTParser.newParser(Util.JAVA_LEVEL);
-        Map<String, String> options = JavaCore.getOptions();
-        JavaCore.setComplianceOptions(Util.JAVA_VERSION, options);
-        astParser.setCompilerOptions(options);
-
-        astParser.setSource(source.toCharArray());
-
-        astParser.setKind(ASTParser.K_COMPILATION_UNIT);
-        astParser.setResolveBindings(true);
-        srcPath = srcPath == null ? "" : srcPath;
-        astParser.setEnvironment(getClassPath(), new String[] {srcPath}, null, true);
-        astParser.setUnitName(srcFile);
-        astParser.setBindingsRecovery(true);
-
-        try{
-            return (CompilationUnit) astParser.createAST(null);
-        }catch(Exception e) {
-            return null;
-        }
-    }
-
-    private static String[] getClassPath() {
-        String property = System.getProperty("java.class.path", ".");
-        return property.split(File.pathSeparator);
     }
 }

@@ -2,26 +2,51 @@ package trans.common;
 
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
-import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.SAXReader;
 import org.dom4j.io.XMLWriter;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTParser;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import trans.dynamicUtils.DynamicInfo;
+import trans.dynamicUtils.DynamicParser;
+import trans.staticUtils.StaticInfo;
+import trans.staticUtils.StaticParser;
 import trans.trace.TraceParser;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Map;
 
 public class Util {
     public static final int JAVA_LEVEL = AST.JLS8;
     public static final String JAVA_VERSION = JavaCore.VERSION_1_8;
-    public static final String JAVA2FIGARO_JAR_PATH = System.getProperty("user.dir") + "\\out\\artifacts\\Java2Figaro_jar\\Java2Figaro.jar";
+    public static final String LIBRARY_PATH = System.getProperty("user.dir") + "\\lib";
+    public static final String FIGARO_JAR_PATH = LIBRARY_PATH + "\\figaro_2.12-5.0.0.0.jar";
+    public static final String JAVA2FIGARO_JAR_PATH = LIBRARY_PATH + "\\Java2Figaro.jar";
+    public static final String WORK_PATH = System.getProperty("user.dir") + "\\resources\\test";
+    public static final String COPY_PROJECT_PATH = WORK_PATH + "\\copy";
+    public static final String FIGARO_FILE_PATH = WORK_PATH + "\\patch.scala";
+    public static final String JSON_FILE_PATH = COPY_PROJECT_PATH + "\\DumpResult.json";
 
-    public static void copyProject(String projectPath, String targetDir) {
-        String command = "xcopy " + projectPath + " " + targetDir + " /E /I /H /C /Y";
+    public static double run(String originProjectPath, String srcFilePath, String testName, String methodName,
+                            ArrayList<String> exEntry, ArrayList<String> exRet) {
+        copyProject(originProjectPath);
+        StaticInfo stcInfo = StaticParser.Analyze(originProjectPath + srcFilePath, methodName);
+        String traceCode = TraceParser.Analyze(originProjectPath + srcFilePath, methodName);
+        print(traceCode, COPY_PROJECT_PATH + srcFilePath);
+        addDependencyToPom(COPY_PROJECT_PATH);
+        runTest(COPY_PROJECT_PATH, testName);
+        DynamicInfo dycInfo = DynamicParser.Analyze(JSON_FILE_PATH, stcInfo, exEntry, exRet);
+        print(dycInfo.genFigaroSource(), FIGARO_FILE_PATH);
+        return runFigaroProgram(WORK_PATH);
+    }
+
+    private static void copyProject(String projectPath) {
+        String command = "xcopy " + projectPath + " " + COPY_PROJECT_PATH + " /E /I /H /C /Y";
         try {
             Runtime.getRuntime().exec(command).waitFor();
         } catch (IOException | InterruptedException e) {
@@ -29,55 +54,51 @@ public class Util {
         }
     }
 
-    public static void runTest(String projectPath, String testName) {
+    private static void runTest(String projectPath, String testName) {
         String command = "D: && cd " + projectPath + "&& mvn test -Dtest=" + testName;
-        System.out.println(command);
+        LevelLogger.debug("RUN TEST : " + command);
         try {
             Process process = Runtime.getRuntime().exec("cmd /c " + command);
             InputStream fis = process.getInputStream();
             InputStreamReader isr = new InputStreamReader(fis);
             BufferedReader br = new BufferedReader(isr);
-            String line = null;
+            String line;
             while((line = br.readLine()) != null)
-                System.out.println(line);
+                LevelLogger.debug(line);
             process.waitFor();
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
     }
 
-    public static void runFigaroProgram(String workPath, String figaroJARPath) {
-        String classesPath = workPath + "\\classes";
+    private static double runFigaroProgram(String workPath) {
+        double retValue = 0;
         String sourcePath = workPath + "\\patch.scala";
-        String command1 = "scalac -cp " + figaroJARPath + " -d " + classesPath + " " + sourcePath;
-        String command2 = "scala -cp " + classesPath + ";" + figaroJARPath + " patch";
-        System.out.println(command1);
-        System.out.println(command2);
-
-        String className = "testParser";
-        String resourceDir = System.getProperty("user.dir") + "\\resources";
-        String outFile = resourceDir + "\\" + className + "Trace.java";
-        String command3 = "javac -cp " + Util.JAVA2FIGARO_JAR_PATH + " " + outFile;
-        String command4 = "java -cp " + resourceDir + ";" + Util.JAVA2FIGARO_JAR_PATH + " " + className;
-        System.out.println(command3);
-        System.out.println(command4);
+        String command1 = "scalac -cp " + FIGARO_JAR_PATH + " -d " + workPath + " " + sourcePath;
+        String command2 = "scala -cp " + workPath + ";" + FIGARO_JAR_PATH + " patch";
+        LevelLogger.debug("COMPILE FIGARO SOURCE : " + command1);
+        LevelLogger.debug("RUN FIGARO SOURCE : " + command2);
 
         try {
             Process process = Runtime.getRuntime().exec("cmd /c " + command1 + " && " + command2);
-            //Process process = Runtime.getRuntime().exec("cmd /c " + command3 + " && " + command4);
             InputStream fis = process.getInputStream();
             InputStreamReader isr = new InputStreamReader(fis);
             BufferedReader br = new BufferedReader(isr);
-            String line = null;
+            String line;
             while((line = br.readLine()) != null)
-                System.out.println(line);
+                try {
+                    retValue = Double.parseDouble(line);
+                    break;
+                } catch (NumberFormatException ignored) {
+                }
             process.waitFor();
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
+        return retValue;
     }
 
-    public static void addDependencyToPom(String projectDir, String jarPath) {
+    private static void addDependencyToPom(String projectDir) {
         try {
             File pomFile = new File(projectDir + "\\pom.xml");
             Document document = new SAXReader().read(pomFile);
@@ -94,7 +115,7 @@ public class Util {
             artifactIdNode.setText("java2figaro");
             versionNode.setText("1.0");
             scopeNode.setText("system");
-            systemPathNode.setText(jarPath);
+            systemPathNode.setText(JAVA2FIGARO_JAR_PATH);
 
             Writer osWrite = new OutputStreamWriter(new FileOutputStream(pomFile));
             OutputFormat format = OutputFormat.createPrettyPrint();
@@ -105,6 +126,36 @@ public class Util {
         } catch (DocumentException | IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static CompilationUnit genASTFromSource(String srcFile, String srcPath) {
+        String source = readFileToString(srcFile);
+        if(source.isEmpty()) return null;
+
+        ASTParser astParser = ASTParser.newParser(JAVA_LEVEL);
+        Map<String, String> options = JavaCore.getOptions();
+        JavaCore.setComplianceOptions(JAVA_VERSION, options);
+        astParser.setCompilerOptions(options);
+
+        astParser.setSource(source.toCharArray());
+
+        astParser.setKind(ASTParser.K_COMPILATION_UNIT);
+        astParser.setResolveBindings(true);
+        srcPath = srcPath == null ? "" : srcPath;
+        astParser.setEnvironment(getClassPath(), new String[] {srcPath}, null, true);
+        astParser.setUnitName(srcFile);
+        astParser.setBindingsRecovery(true);
+
+        try{
+            return (CompilationUnit) astParser.createAST(null);
+        }catch(Exception e) {
+            return null;
+        }
+    }
+
+    private static String[] getClassPath() {
+        String property = System.getProperty("java.class.path", ".");
+        return property.split(File.pathSeparator);
     }
 
     public static String readFileToString(String srcFile) {

@@ -1,5 +1,7 @@
 package trans.staticUtils;
 
+import org.eclipse.jdt.core.dom.ASTNode;
+
 import java.util.ArrayList;
 
 public class Assign extends StaticMsg {
@@ -7,8 +9,8 @@ public class Assign extends StaticMsg {
     private Stmt _stmt;
     private ArrayList<VarNode> _useList = new ArrayList<>();
 
-    Assign(Stmt stmt, int line, int column) {
-        super(line, column);
+    Assign(Stmt stmt, int line, int column, ASTNode node) {
+        super(line, column, node);
         _stmt = stmt;
         stmt.addAssign(this);
     }
