@@ -1,0 +1,19 @@
+{
+	"data":[
+	{ 
+		"project" : "D:\program\workspace\Java2Figaro\\resources\\test\origin1",
+		"source" : "\src\main\java\introclassJava\median_1bf73a9c_000.java",
+		"test" : "median_1bf73a9c_000WhiteboxTest#test3",
+		"method": "exec",
+		"entry" : [{"var" : "scanner"}, {"var" : "output"}],
+		"return" : [{"var" : "output"}]
+	},
+	{
+		"project" : "D:\program\workspace\Java2Figaro\\resources\\test\origin4",
+		"source" : "\\src\\main\\java\\introclassJava\\checksum_2c155667_003.java",
+		"test" : "checksum_2c155667_003WhiteboxTest#test3",
+		"method": "exec",
+		"entry" : [{"var" : "scanner"}, {"var" : "output"}],
+		"return" : [{"var" : "output"}]
+	}]
+}
