@@ -10,9 +10,11 @@ public class Strategy {
     private static ArrayList<Strategy> _stgList = new ArrayList<>();
 
     public void init() {
-        _stgList.add(new StrategyOdevity());
-        _stgList.add(new StrategyPositive());
-        _stgList.add(new StrategyEquals());
+        _stgList.add(new StrategyVariableIdentifierOdevity());
+        _stgList.add(new StrategyVariableIdentifierPositive());
+        _stgList.add(new StrategyCompareValueEquals());
+        _stgList.add(new StrategyEntryVariableUse());
+        _stgList.add(new StrategyMultipleAssign());
     }
 
     public ArrayList<Pair<String, Double>> parse(ArrayList<DynamicMsg> msgList) {

@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class StrategyEquals extends Strategy {
+public class StrategyCompareValueEquals extends Strategy {
     private Map<String, String> values = new HashMap<>();
 
     private String getNodeValue(Expression node) {

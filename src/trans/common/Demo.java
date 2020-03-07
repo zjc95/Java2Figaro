@@ -5,15 +5,16 @@ import java.util.ArrayList;
 public class Demo {
 
     public static void main(String[] args) {
+        String workListPath = System.getProperty("user.dir") + "\\resources\\test\\WorkList.json";
+        Transverse.run(workListPath);
+    }
+    
+    /*public static void main(String[] args) {
         String IntroClassPath = "D:\\program\\workspace\\IntroClassJavaCopy";
         String mutationPath = "D:\\program\\workspace\\IntroClassJavaCopy\\IntroClassJava";
         IntroClassScript.Crawl(IntroClassPath, mutationPath);
-    }
-
-    /*public static void main(String[] args) {
-        String workListPath = System.getProperty("user.dir") + "\\resources\\test\\WorkList.json";
-        Transverse.run(workListPath);
     }*/
+
 
     /*public static void main(String[] args) {
         String originProjectPath = System.getProperty("user.dir") + "\\resources\\test\\origin1";

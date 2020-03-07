@@ -44,11 +44,7 @@ public class DynamicStmt extends DynamicMsg {
         _info.setStructure(stmt, this);
     }
 
-    String genSource() {
-        StringBuilder source = new StringBuilder();
-        for (FieldRelation relation : _relationList)
-            source.append(DynamicInfo.genDefinitionSource(relation.getDef(), relation.getUse()));
-
+    public ArrayList<String> getUseList() {
         ArrayList<String> useList = new ArrayList<>();
         Stmt stmt = (Stmt) _msg;
         if (!stmt.isControlStmt())
@@ -58,8 +54,14 @@ public class DynamicStmt extends DynamicMsg {
                 useList.add(ctrl.getFigaroID());
         if(_structure != null)
             useList.add(_structure.getFigaroID());
-        source.append(DynamicInfo.genDefinitionSource(_figaroID, useList));
+        return useList;
+    }
 
+    String genSource() {
+        StringBuilder source = new StringBuilder();
+        for (FieldRelation relation : _relationList)
+            source.append(DynamicInfo.genDefinitionSource(relation.getDef(), relation.getUse()));
+        source.append(DynamicInfo.genDefinitionSource(_figaroID, getUseList()));
         return source.toString();
     }
 }

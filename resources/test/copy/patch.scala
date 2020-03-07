@@ -7,54 +7,40 @@ object patch {
     //-------------Semantic--------------
     val Var_scanner = Flip(0.5)
     val Var_output = Flip(0.5)
-    val Var_character = Flip( 0.7)
-    val Var_remainder = Flip( 0.7)
-    val Var_sum = Flip( 0.7)
+    val Var_first = Flip( 0.7)
+    val Var_second = Flip( 0.7)
+    val Var_third = Flip( 0.7)
+    val Var_ans = Flip( 0.7)
     val Var_output_1 = If(Var_output, Flip(0.99), Flip(0.05))
-    val Var_sum_value = Flip( 0.7)
-    val Var_character_value = If(Var_character, Flip(0.99), Flip(0.05))
-    val Control_67_15 = If(Var_character_value, Flip(0.99), Flip(0.05))
-    val Stmt_67_8 = If(Control_67_15, Flip(0.99), Flip(0.05))
-    val Stmt_68_12 = If(Stmt_67_8, Flip(0.99), Flip(0.05))
-    val Var_character_value_1 = RichCPD(Var_scanner, Stmt_68_12, 
+    val Var_first_value = If(Var_scanner, Flip(0.99), Flip(0.05))
+    val Var_second_value = If(Var_scanner, Flip(0.99), Flip(0.05))
+    val Var_third_value = If(Var_scanner, Flip(0.99), Flip(0.05))
+    val Control_67_13 = RichCPD(Var_second_value, Var_first_value, 
       (OneOf(true), OneOf(true)) -> Flip(0.99),
       (*, *) -> Flip(0.05))
-    val Var_sum_value_1 = RichCPD(Var_character_value_1, Var_sum_value, Stmt_67_8, 
-      (OneOf(true), OneOf(true), OneOf(true)) -> Flip(0.99),
-      (*, *, *) -> Flip(0.05))
-    val Control_67_15_1 = If(Var_character_value_1, Flip(0.99), Flip(0.05))
-    val Stmt_67_8_1 = If(Control_67_15_1, Flip(0.99), Flip(0.05))
-    val Stmt_68_12_1 = If(Stmt_67_8_1, Flip(0.99), Flip(0.05))
-    val Var_character_value_2 = RichCPD(Var_scanner, Stmt_68_12_1, 
+    val Control_67_44 = RichCPD(Var_third_value, Var_first_value, 
       (OneOf(true), OneOf(true)) -> Flip(0.99),
       (*, *) -> Flip(0.05))
-    val Var_sum_value_2 = RichCPD(Var_character_value_2, Var_sum_value_1, Stmt_67_8_1, 
-      (OneOf(true), OneOf(true), OneOf(true)) -> Flip(0.99),
-      (*, *, *) -> Flip(0.05))
-    val Control_67_15_2 = If(Var_character_value_2, Flip(0.99), Flip(0.05))
-    val Stmt_67_8_2 = If(Control_67_15_2, Flip(0.99), Flip(0.05))
-    val Stmt_68_12_2 = If(Stmt_67_8_2, Flip(0.99), Flip(0.05))
-    val Stmt_68_12_3 = If(Stmt_67_8_2, Flip(0.99), Flip(0.05))
-    val Stmt_70_14 = If(Stmt_68_12_3, Flip(0.99), Flip(0.05))
-    val Var_e = Flip(0.5)
-    val Var_character_value_3 = If(Stmt_70_14, Flip(0.99), Flip(0.05))
-    val Var_sum_value_3 = RichCPD(Var_character_value_3, Var_sum_value_2, Stmt_67_8_2, 
-      (OneOf(true), OneOf(true), OneOf(true)) -> Flip(0.99),
-      (*, *, *) -> Flip(0.05))
-    val Control_67_15_3 = If(Var_character_value_3, Flip(0.99), Flip(0.05))
-    val Var_remainder_value = If(Var_sum_value_3, Flip(0.99), Flip(0.05))
-    val Var_output_2 = RichCPD(Var_output_1, Var_remainder_value, 
+    val Stmt_67_8 = RichCPD(Control_67_13, Control_67_44, 
       (OneOf(true), OneOf(true)) -> Flip(0.99),
       (*, *) -> Flip(0.05))
-    val Stmt_77_8 = Flip( 0.7)
+    val Var_ans_value = RichCPD(Var_first_value, Stmt_67_8, 
+      (OneOf(true), OneOf(true)) -> Flip(0.99),
+      (*, *) -> Flip(0.05))
+    val Var_ans_value_1 = If(Var_third_value, Flip(0.99), Flip(0.05))
+    val Var_output_2 = RichCPD(Var_output_1, Var_ans_value_1, 
+      (OneOf(true), OneOf(true)) -> Flip(0.99),
+      (*, *) -> Flip(0.05))
+    val Stmt_78_8 = Flip( 0.7)
     val Ret = If(Var_output_2, Flip(0.99), Flip(0.05))
 
     //-------------Observation--------------
     Var_scanner.observe(true)
     Var_output.observe(true)
-    Var_e.observe(true)
 
     //-------------Constraint--------------
+    Ret.addConstraint((b: Boolean) => if (b) 0.3 else 0.7)
+    Var_ans_value_1.addConstraint((b: Boolean) => if (b) 0.3 else 0.7)
 
     //-------------Sampling--------------
     val samplePatchValid = VariableElimination(Ret)

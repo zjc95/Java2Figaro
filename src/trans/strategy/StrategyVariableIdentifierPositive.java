@@ -6,7 +6,7 @@ import trans.dynamicUtils.DynamicMsg;
 
 import java.util.ArrayList;
 
-public class StrategyPositive extends Strategy{
+public class StrategyVariableIdentifierPositive extends Strategy{
     private Pair<String, Double> checkPositive(String def, String figaroID, String str) {
         try {
             int val = Integer.parseInt(str);

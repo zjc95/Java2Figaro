@@ -3,7 +3,7 @@ package trans.dynamicUtils;
 import trans.staticUtils.Assign;
 import trans.staticUtils.VarNode;
 
-class DynamicEntry extends DynamicMsg {
+public class DynamicEntry extends DynamicMsg {
     private String _value;
     private String _exVarID;
 
@@ -15,6 +15,10 @@ class DynamicEntry extends DynamicMsg {
     DynamicEntry(DynamicInfo info, String VarID) {
         super(info, 0, 0, null);
         _exVarID = VarID;
+    }
+
+    public String getValue() {
+        return _value;
     }
 
     void parse() {

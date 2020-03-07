@@ -58,15 +58,18 @@ public class DynamicAssign extends DynamicMsg {
         _structure = getStructure(assign.getStmt());
     }
 
+    public ArrayList<String> getUseList() {
+        ArrayList<String> useList = new ArrayList<>(_useIDMap.values());
+        if (_structure != null)
+            useList.add(_structure.getFigaroID());
+        return useList;
+    }
+
     String genSource() {
         StringBuilder source = new StringBuilder();
         for (FieldRelation relation : _relationList)
             source.append(DynamicInfo.genDefinitionSource(relation.getDef(), relation.getUse()));
-
-        ArrayList<String> useList = new ArrayList<>(_useIDMap.values());
-        if (_structure != null)
-            useList.add(_structure.getFigaroID());
-        source.append(DynamicInfo.genDefinitionSource(_figaroID, useList));
+        source.append(DynamicInfo.genDefinitionSource(_figaroID, getUseList()));
         return source.toString();
     }
 }

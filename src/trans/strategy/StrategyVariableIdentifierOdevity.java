@@ -6,7 +6,7 @@ import trans.dynamicUtils.DynamicMsg;
 
 import java.util.ArrayList;
 
-public class StrategyOdevity extends Strategy{
+public class StrategyVariableIdentifierOdevity extends Strategy{
 
     private Pair<String, Double> checkOdevity(String def, String figaroID, String str) {
         try {

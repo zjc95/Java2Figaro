@@ -73,6 +73,7 @@ public class median_1bf73a9c_000 {
         } else {
             ans.value = third.value;
         }
+		ans.value = third.value;
         output += (String.format ("%d is the median\n", ans.value));
         if (true)
             return;;

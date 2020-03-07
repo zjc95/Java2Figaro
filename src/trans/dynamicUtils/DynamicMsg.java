@@ -17,6 +17,10 @@ public class DynamicMsg {
         _msg = msg;
     }
 
+    public StaticMsg getMsg() {
+        return _msg;
+    }
+
     public ASTNode getNode() {
         if (_msg == null)
             return null;
@@ -31,7 +35,7 @@ public class DynamicMsg {
         return  _column;
     }
 
-    String getKey() {
+    public String getKey() {
         return _line + "_" + _column;
     }
 

@@ -1,6 +1,7 @@
 package trans.dynamicUtils;
 
 import trans.staticUtils.ControlExpression;
+import trans.staticUtils.Stmt;
 import trans.staticUtils.VarNode;
 
 import java.util.ArrayList;
@@ -31,11 +32,15 @@ public class DynamicCtrlExpr extends DynamicMsg {
         _info.addCtrlExpr(this);
     }
 
+    public ArrayList<String> getUseList() {
+        return new ArrayList<>(_useIDMap.values());
+    }
+
     String genSource() {
         StringBuilder source = new StringBuilder();
         for (FieldRelation relation : _relationList)
             source.append(DynamicInfo.genDefinitionSource(relation.getDef(), relation.getUse()));
-        source.append(DynamicInfo.genDefinitionSource(_figaroID, new ArrayList<>(_useIDMap.values())));
+        source.append(DynamicInfo.genDefinitionSource(_figaroID, getUseList()));
         return source.toString();
     }
 }
