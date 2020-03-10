@@ -135,7 +135,7 @@ public class DynamicInfo {
         }
         else {
             if (!isDef) {
-                LevelLogger.error("Error : Use Without Define : " + varID);
+                LevelLogger.warn("WARNING : Use Without Define : " + varID);
                 return null;
             }
             _varDefTime.put(varName, 0);
@@ -288,7 +288,7 @@ public class DynamicInfo {
     static String genDefinitionSource(String def, ArrayList<String> useList) {
         int size = useList.size();
         if (size == 0) {
-            LevelLogger.warn("WARNING: Empty UseList : def " + def);
+            LevelLogger.warn("WARNING : Empty UseList : def " + def);
             return "    val " + def + " = Flip( " + CONSTANT_PROBABILITY + ")\n";
         }
 

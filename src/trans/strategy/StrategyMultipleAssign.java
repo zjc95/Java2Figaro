@@ -2,6 +2,7 @@ package trans.strategy;
 
 import javafx.util.Pair;
 import org.eclipse.jdt.core.dom.*;
+import trans.common.LevelLogger;
 import trans.dynamicUtils.DynamicAssign;
 import trans.dynamicUtils.DynamicMsg;
 import trans.staticUtils.Assign;
@@ -43,7 +44,7 @@ public class StrategyMultipleAssign extends Strategy {
                 DynamicAssign dynamicAssign = (DynamicAssign) msg;
                 String varID = dynamicAssign.getDefVar().getID();
                 if ((varAssignSet.contains(varID)) && (!checkNode(dynamicAssign)) && (!checkUse(dynamicAssign, varID))) {
-                    System.out.println("MultipleAssign : " + msg.getFigaroID());
+                    //LevelLogger.debug("MultipleAssign : " + msg.getFigaroID());
                     observationList.add(new Pair<>(msg.getFigaroID(), 0.3));
                 }
                 varAssignSet.add(varID);

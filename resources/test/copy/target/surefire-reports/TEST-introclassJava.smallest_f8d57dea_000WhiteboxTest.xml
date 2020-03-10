@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuite tests="1" failures="1" name="introclassJava.median_1bf73a9c_000WhiteboxTest" time="0.034" errors="0" skipped="0">
+<testsuite tests="1" failures="0" name="introclassJava.smallest_f8d57dea_000WhiteboxTest" time="0.03" errors="0" skipped="0">
   <properties>
     <property name="java.runtime.name" value="Java(TM) SE Runtime Environment"/>
     <property name="sun.boot.library.path" value="C:\Program Files\Java\jdk1.8.0_241\jre\bin"/>
@@ -15,7 +15,7 @@
     <property name="user.country" value="CN"/>
     <property name="sun.java.launcher" value="SUN_STANDARD"/>
     <property name="sun.os.patch.level" value=""/>
-    <property name="test" value="median_1bf73a9c_000WhiteboxTest#test3"/>
+    <property name="test" value="smallest_f8d57dea_000WhiteboxTest#test1"/>
     <property name="java.vm.specification.name" value="Java Virtual Machine Specification"/>
     <property name="user.dir" value="D:\program\workspace\Java2Figaro\resources\test\copy"/>
     <property name="java.runtime.version" value="1.8.0_241-b07"/>
@@ -47,7 +47,7 @@
     <property name="java.vm.specification.version" value="1.8"/>
     <property name="sun.arch.data.model" value="64"/>
     <property name="java.home" value="C:\Program Files\Java\jdk1.8.0_241\jre"/>
-    <property name="sun.java.command" value="org.codehaus.plexus.classworlds.launcher.Launcher test -Dtest=median_1bf73a9c_000WhiteboxTest#test3"/>
+    <property name="sun.java.command" value="org.codehaus.plexus.classworlds.launcher.Launcher test -Dtest=smallest_f8d57dea_000WhiteboxTest#test1"/>
     <property name="java.specification.vendor" value="Oracle Corporation"/>
     <property name="user.language" value="zh"/>
     <property name="awt.toolkit" value="sun.awt.windows.WToolkit"/>
@@ -64,20 +64,5 @@
     <property name="sun.desktop" value="windows"/>
     <property name="sun.cpu.isalist" value="amd64"/>
   </properties>
-  <testcase classname="introclassJava.median_1bf73a9c_000WhiteboxTest" name="test3" time="0.034">
-    <failure message="expected:&lt;...rsseparatedbyspaces&gt;[0]isthemedian&gt; but was:&lt;...rsseparatedbyspaces&gt;[1]isthemedian&gt;" type="org.junit.ComparisonFailure">org.junit.ComparisonFailure: expected:&lt;...rsseparatedbyspaces&gt;[0]isthemedian&gt; but was:&lt;...rsseparatedbyspaces&gt;[1]isthemedian&gt;
-	at org.junit.Assert.assertEquals(Assert.java:115)
-	at org.junit.Assert.assertEquals(Assert.java:144)
-	at introclassJava.median_1bf73a9c_000WhiteboxTest.test3(median_1bf73a9c_000WhiteboxTest.java:32)
-	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
-	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
-	at java.lang.reflect.Method.invoke(Method.java:498)
-	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:47)
-	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
-	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:44)
-	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
-	at org.junit.internal.runners.statements.FailOnTimeout$StatementThread.run(FailOnTimeout.java:74)
-</failure>
-  </testcase>
+  <testcase classname="introclassJava.smallest_f8d57dea_000WhiteboxTest" name="test1" time="0.03"/>
 </testsuite>

@@ -6,9 +6,94 @@ import org.eclipse.core.runtime.IBundleGroupProvider;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 
 public class IntroClassScript {
-    public static void Crawl(String IntroClassPath, String MutationPath) {
+    public static void parseResult(String resultPath) {
+        File resultDir = new File(resultPath);
+        if ((!resultDir.exists()) || (!resultDir.isDirectory()))
+            return;
+        File[] resultFiles = resultDir.listFiles();
+        if (resultFiles == null)
+            return;
+
+        for (File resultFile : resultFiles) {
+            if (!resultFile.getName().endsWith(".txt")) continue;
+            try {
+
+                String outPath = resultPath + "\\AvailablePatch_" + resultFile.getName();
+                File outFile = new File(outPath);
+                if (outFile.exists())
+                    outFile.delete();
+
+                InputStream in = new FileInputStream(resultFile);
+                InputStreamReader inputStreamReader = new InputStreamReader(in, StandardCharsets.UTF_8);
+                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+                String line;
+
+                String bugID = null;
+                String patch = null;
+                boolean repairTest = false;
+                HashSet<String> originFailTest = new HashSet<>();
+                HashSet<String> patchFailTest = new HashSet<>();
+                while ((line = bufferedReader.readLine()) != null) {
+                    if (line.length() == 0)
+                        continue;
+                    if (line.charAt(0) == '\\') {
+                        String[] tags = line.split("\\\\");
+                        bugID = tags[1] + "_" + tags[2].substring(0, 8) + "_" + tags[3];
+                        System.out.println(bugID);
+                    }
+                    else if (line.contains("Origin")) {
+                        if (repairTest)
+                            Util.write("\n--------------\n", outPath, true);
+                        patch = "Origin";
+                        repairTest = false;
+                        originFailTest.clear();
+                        patchFailTest.clear();
+                    }
+                    else if (getNumber(line) != null) {
+                        patch = line;
+                        patchFailTest.clear();
+                    }
+                    else if(line.endsWith("Test")) {
+                        if (patch.equals("Origin"))
+                            originFailTest.add(line);
+                        else
+                            patchFailTest.add(line);
+                    }
+                    else if(line.contains("BUILD SUCCESS")) {
+                        HashSet<String> patchSuccessTest = new HashSet<>(originFailTest);
+                        patchSuccessTest.removeAll(patchFailTest);
+                        if (patchSuccessTest.size() > 0) {
+                            Util.write(bugID + " " + patch, outPath, true);
+                            repairTest = true;
+                        }
+                    }
+                    else if ((line.contains("BUILD FAILURE")) || ((line.charAt(0) == '#'))) {
+                        if (patchFailTest.size() == 0)
+                            continue;
+
+                        HashSet<String> patchSuccessTest = new HashSet<>(originFailTest);
+                        patchSuccessTest.removeAll(patchFailTest);
+                        if (patchSuccessTest.size() > 0) {
+                            Util.write(bugID + " " + patch, outPath, true);
+                            repairTest = true;
+                        }
+                    }
+                }
+
+                inputStreamReader.close();
+                bufferedReader.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public static void crawl(String IntroClassPath, String MutationPath) {
         String DataPath = IntroClassPath + "\\dataset";
 
         File DataFile = new File(DataPath);
@@ -21,16 +106,16 @@ public class IntroClassScript {
                 if (subjectFiles == null) continue;
                 for (File subjectFile : subjectFiles)
                     if (subjectFile.isDirectory() && !subjectFile.getName().equals("ref")) {
-                        String outPath = subjectFile.getAbsolutePath() + "\\output.txt";
-                        File outFile = new File(outPath);
-                        if (outFile.exists())
-                            outFile.delete();
                         File[] bugFiles = subjectFile.listFiles();
                         if (bugFiles == null) continue;
                         for (File bugFile : bugFiles) {
-                            /*if(!projectFile.getName().equals("smallest"))
+                            if(!projectFile.getName().equals("smallest"))
                                 continue;
-                            if(!subjectFile.getName().equals("818f8cf4e2e713753d02db9ee70a099b71f2a5a6bdc904191cf9ba68cfa5f64328464dccdd9b02fe0822e14a403dc196fe88b9964969409e60c93a776186a86a"))
+                            String outPath = MutationPath + "\\output\\" + subjectFile.getName().substring(0, 8) + "_" + bugFile.getName() + ".txt";
+                            File outFile = new File(outPath);
+                            if (outFile.exists())
+                                outFile.delete();
+                            /*if(!subjectFile.getName().equals("818f8cf4e2e713753d02db9ee70a099b71f2a5a6bdc904191cf9ba68cfa5f64328464dccdd9b02fe0822e14a403dc196fe88b9964969409e60c93a776186a86a"))
                                 continue;
                             if(!bugFile.getName().equals("003"))
                                 continue;*/
@@ -42,7 +127,24 @@ public class IntroClassScript {
                             if (!javaFile.exists())
                                 LevelLogger.error("Cannot Find Java Source : " + javaFilePath);
 
-                            File mutationDirectoryFile = new File(MutationPath + "\\dataset" + bugRelativePath + "\\mutations");
+                            Util.write(bugRelativePath + "\nOrigin\n" + runTest(bugFile.getAbsolutePath()) + "------\n", outPath, true);
+                            File[] mutationFiles = getMutationFile(MutationPath, subjectFile.getName(), bugFile.getName(), javaFileName);
+                            if (mutationFiles == null)
+                                continue;
+                            for (File mutationJavaFile : mutationFiles) {
+                                try {
+                                    File originJavaFile = new File(javaFilePath);
+                                    if (originJavaFile.exists())
+                                        originJavaFile.delete();
+                                    Files.copy(mutationJavaFile.toPath(), originJavaFile.toPath());
+                                    Util.write(mutationJavaFile.getAbsolutePath() + "\n" + runTest(bugFile.getAbsolutePath()) + "------\n", outPath, true);
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                            Util.write("######\n", outPath, true);
+
+                            /*File mutationDirectoryFile = new File(MutationPath + "\\dataset" + bugRelativePath + "\\mutations");
                             if (!mutationDirectoryFile.exists()) continue;
                             File[] mutationFiles = mutationDirectoryFile.listFiles();
                             if (mutationFiles == null) continue;
@@ -63,10 +165,33 @@ public class IntroClassScript {
                                     }
                                 }
                             }
-                            write("######\n", outPath);
+                            write("######\n", outPath);*/
                         }
                     }
             }
+    }
+
+    private static File[] getMutationFile(String MutationPath, String subject, String bugID, String javaFileName) {
+        File bugDirectory = new File(MutationPath + "\\smallest_part1\\" + subject + "\\" + bugID);
+        if (!bugDirectory.exists())
+            bugDirectory = new File(MutationPath + "\\smallest_part2\\" + subject + "\\" + bugID);
+        if (!bugDirectory.exists())
+            bugDirectory = new File(MutationPath + "\\smallest_part3\\" + subject + "\\" + bugID);
+        if (!bugDirectory.exists())
+            bugDirectory = new File(MutationPath + "\\smallest_part4\\" + subject + "\\" + bugID);
+        if (!bugDirectory.exists())
+            return null;
+
+        ArrayList<File> files = new ArrayList<>();
+        String[] dirs = {"angelixAngelix2sc213", "angelixAngelix3sc213", "angelixAngelix4sc213", "angelixAngelix213",
+                "angelixAngelix2213", "angelixAngelix3213", "angelixAngelix4213", "angelixangelixMaxSat1511",
+                "angelixangelixMaxSat15112", "angelixCVC4213", "angelixEnum213", "angelixMeta213", "angelixMetaXts213"};
+        for (String dir : dirs) {
+            File file = new File(bugDirectory.getAbsolutePath() + "\\" + dir + "\\output\\introclassJava\\" + javaFileName);
+            if (file.exists())
+                files.add(file);
+        }
+        return files.toArray(new File[0]);
     }
 
     private static String runTest(String projectPath) {
@@ -97,6 +222,11 @@ public class IntroClassScript {
                     flag = true;
                     line = line.substring(line.indexOf(":"));
                 }
+                if (line.contains("BUILD FAILURE"))
+                    out.append("BUILD FAILURE").append("\n");
+                if (line.contains("BUILD SUCCESS"))
+                    out.append("BUILD SUCCESS").append("\n");
+
                 if (!flag) continue;
                 int beginIndex = line.indexOf('t');
                 int midIndex = line.indexOf('(');
@@ -111,23 +241,13 @@ public class IntroClassScript {
         return out.toString();
     }
 
-    public static void write(String string, String filePath) {
-        File file = new File(filePath);
-        BufferedWriter bufferedWriter = null;
+    private static Integer getNumber(String string) {
         try {
-            bufferedWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file, true), StandardCharsets.UTF_8));
-            bufferedWriter.write(string);
-            bufferedWriter.write("\n");
-            bufferedWriter.close();
-        } catch (IOException ignored) {
-        } finally {
-            if (bufferedWriter != null) {
-                try {
-                    bufferedWriter.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+            int num = Integer.parseInt(string);
+            return num;
+        }
+        catch (NumberFormatException e) {
+            return null;
         }
     }
 }

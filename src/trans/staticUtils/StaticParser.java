@@ -9,26 +9,7 @@ import org.eclipse.jdt.core.dom.*;
 
 public class StaticParser {
     public static StaticInfo Analyze(String srcFile) {
-        String source = Util.readFileToString(srcFile);
-        ASTParser astParser = ASTParser.newParser(Util.JAVA_LEVEL);
-        astParser.setSource(source.toCharArray());
-        CompilationUnit srcUnit = (CompilationUnit) astParser.createAST(null);
-
-        MethodDeclCollector methodDeclCollector = new MethodDeclCollector();
-        methodDeclCollector.init();
-        srcUnit.accept(methodDeclCollector);
-        List<MethodDeclaration> srcMethods = methodDeclCollector.getAllMethDecl();
-
-        StaticInfo info = new StaticInfo();
-
-        for (MethodDeclaration sm : srcMethods) {
-            SourceParser parser = new SourceParser(srcUnit, info);
-            parser.process(sm);
-        }
-
-        info.build();
-        LevelLogger.debug(info.AnalyzeInformation());
-        return info;
+        return Analyze(srcFile, null);
     }
 
     public static StaticInfo Analyze(String srcFile, String methodName) {
@@ -44,13 +25,13 @@ public class StaticParser {
         StaticInfo info = new StaticInfo();
 
         for (MethodDeclaration sm : srcMethods)
-            if (sm.getName().getIdentifier().equals(methodName)) {
+            if ((methodName == null) || (sm.getName().getIdentifier().equals(methodName))) {
                 SourceParser parser = new SourceParser(srcUnit, info);
                 parser.process(sm);
             }
 
         info.build();
-        LevelLogger.debug(info.AnalyzeInformation());
+        //LevelLogger.debug(info.AnalyzeInformation());
         return info;
     }
 

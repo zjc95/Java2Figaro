@@ -41,6 +41,7 @@ public class StrategyCompareValueEquals extends Strategy {
 
     public ArrayList<Pair<String, Double>> parse(ArrayList<DynamicMsg> msgList) {
         ArrayList<Pair<String, Double>> observationList = new ArrayList<>();
+        values.clear();
         for (DynamicMsg msg : msgList)
             if (msg instanceof DynamicAssign)
                 updateValues((DynamicAssign) msg);

@@ -7,6 +7,7 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.Map;
 
 public class Util {
@@ -116,5 +117,37 @@ public class Util {
             }
         }
         file.delete();
+    }
+
+    public static void write(String string, String filePath, boolean isAppend) {
+        File file = new File(filePath);
+        BufferedWriter bufferedWriter = null;
+        try {
+            bufferedWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file, isAppend), StandardCharsets.UTF_8));
+            bufferedWriter.write(string);
+            bufferedWriter.write("\n");
+            bufferedWriter.close();
+        } catch (IOException ignored) {
+        } finally {
+            if (bufferedWriter != null) {
+                try {
+                    bufferedWriter.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public static void copyFile(File sourceFile, String targetFilePath) {
+        if (!sourceFile.isFile()) return;
+        try {
+            File targetFile = new File(targetFilePath);
+            if (targetFile.exists())
+                targetFile.delete();
+            Files.copy(sourceFile.toPath(), targetFile.toPath());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

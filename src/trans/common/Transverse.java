@@ -1,5 +1,6 @@
 package trans.common;
 
+import com.mysql.cj.xdevapi.JsonArray;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
@@ -19,10 +20,94 @@ import java.io.*;
 import java.util.ArrayList;
 
 public class Transverse {
-    public static void run(String jsonFile) {
-        String jsonSource = Util.readFileToString(jsonFile);
+    public static void runJsonFile(String workPath) {
+        String jsonFilePath = workPath + "\\WorkList.json";
+        String outputPath = workPath + "\\Output.txt";
+
+        String jsonSource = Util.readFileToString(jsonFilePath);
         JSONObject rootObject = (JSONObject) JSONValue.parse(jsonSource);
+        String jsonType = (String) rootObject.get("type");
         JSONArray data = (JSONArray) rootObject.get("data");
+        if (jsonType.equals("Project List"))
+            runJsonFileByProjectList(data, outputPath);
+        else if (jsonType.equals("Project Mutants"))
+            runJsonFileByProjectMutants(workPath, data, outputPath);
+    }
+
+    private static void runJsonFileByProjectMutants(String workPath, JSONArray data, String outputPath) {
+        StringBuilder output = new StringBuilder();
+        for (Object obj : data) {
+            JSONObject jsonData = (JSONObject) obj;
+
+            String projectName = (String) jsonData.get("project");
+            String srcFilePath = (String) jsonData.get("source");
+            String testName = (String) jsonData.get("test");
+            String methodName = (String) jsonData.get("method");
+            JSONArray entryJSON = (JSONArray) jsonData.get("entry");
+            JSONArray retJSON = (JSONArray) jsonData.get("return");
+
+            ArrayList<String> exEntry = new ArrayList<>();
+            for (Object entry : entryJSON) {
+                JSONObject entryData = (JSONObject) entry;
+                exEntry.add((String) entryData.get("var"));
+            }
+
+            ArrayList<String> exRet = new ArrayList<>();
+            for (Object ret : retJSON) {
+                JSONObject retData = (JSONObject) ret;
+                exRet.add((String) retData.get("var"));
+            }
+
+            StringBuilder bugInformation = new StringBuilder();
+            bugInformation.append("project : ").append(projectName);
+            bugInformation.append("srcFilePath : ").append(srcFilePath);
+            bugInformation.append("testName : ").append(testName);
+            bugInformation.append("methodName : ").append(methodName);
+            bugInformation.append("exEntry : ").append(exEntry);
+            bugInformation.append("exRet : ").append(exRet);
+            bugInformation.append("---------------------------------------------");
+            //LevelLogger.debug(bugInformation);
+
+            String mutantDirPath = workPath + "\\" + projectName + "\\mutants";
+            String sourceDirPath = workPath + "\\" + projectName + "\\source";
+            File mutantDir = new File (mutantDirPath);
+            File sourceDir = new File (sourceDirPath);
+            if ((!mutantDir.exists()) || (!sourceDir.exists()))
+                continue;
+            File[] mutantFiles = mutantDir.listFiles();
+            if (mutantFiles == null)
+                continue;
+
+            LevelLogger.debug("project : " + projectName);
+            for (File mutantFile : mutantFiles) {
+                if (!mutantFile.getName().endsWith(".java"))
+                    continue;
+                LevelLogger.debug("MutantFile : " + mutantFile.getName());
+                double probability = Transverse.runMutant(sourceDirPath, srcFilePath, mutantFile, testName, methodName, exEntry, exRet);
+                LevelLogger.debug("Result " + mutantFile.getName() + " : " + String.format("%.4f", probability * 100.0) + "%");
+                output.append(mutantFile.getName()).append(" : ").append(String.format("%.4f", probability * 100.0)).append("%\n");
+            }
+            output.append("\n");
+        }
+        Util.print(output.toString(), outputPath);
+    }
+
+    public static double runMutant(String originProjectPath, String srcFilePath, File mutantFile, String testName, String methodName,
+                                    ArrayList<String> exEntry, ArrayList<String> exRet) {
+        copyProject(originProjectPath, Util.COPY_PROJECT_PATH);
+        Util.copyFile(mutantFile, Util.COPY_PROJECT_PATH + srcFilePath);
+        StaticInfo stcInfo = StaticParser.Analyze(Util.COPY_PROJECT_PATH + srcFilePath, methodName);
+        String traceCode = TraceParser.Analyze(Util.COPY_PROJECT_PATH + srcFilePath, methodName);
+        Util.print(traceCode, Util.COPY_PROJECT_PATH + srcFilePath);
+        addDependencyToPom(Util.COPY_PROJECT_PATH);
+        runTest(Util.COPY_PROJECT_PATH, testName);
+        DynamicInfo dycInfo = DynamicParser.Analyze(Util.JSON_FILE_PATH, stcInfo, exEntry, exRet);
+        Util.print(dycInfo.genFigaroSource(), Util.FIGARO_FILE_PATH);
+        return runFigaroProgram(Util.COPY_PROJECT_PATH);
+    }
+
+    private static void runJsonFileByProjectList(JSONArray data, String outputPath) {
+        StringBuilder output = new StringBuilder();
         for (Object obj : data) {
             JSONObject jsonData = (JSONObject) obj;
 
@@ -45,20 +130,26 @@ public class Transverse {
                 exRet.add((String) retData.get("var"));
             }
 
-            System.out.println("projectPath : " + projectPath);
-            System.out.println("srcFilePath : " + srcFilePath);
-            System.out.println("testName : " + testName);
-            System.out.println("methodName : " + methodName);
-            System.out.println("exEntry : " + exEntry);
-            System.out.println("exRet : " + exRet);
-            System.out.println("---------------------------------------------");
+            StringBuilder bugInformation = new StringBuilder();
+            bugInformation.append("projectPath : ").append(projectPath);
+            bugInformation.append("srcFilePath : ").append(srcFilePath);
+            bugInformation.append("testName : ").append(testName);
+            bugInformation.append("methodName : ").append(methodName);
+            bugInformation.append("exEntry : ").append(exEntry);
+            bugInformation.append("exRet : ").append(exRet);
+            bugInformation.append("---------------------------------------------");
+            //LevelLogger.debug(bugInformation);
 
-            Double probability = Transverse.run(projectPath, srcFilePath, testName, methodName, exEntry, exRet);
-            System.out.println(probability);
+            double probability = Transverse.runProject(projectPath, srcFilePath, testName, methodName, exEntry, exRet);
+
+            String[] projectPathFragment = projectPath.split("\\\\");
+            String projectName = projectPathFragment[projectPathFragment.length - 1];
+            output.append(projectName).append(" : ").append(String.format("%.4f", probability * 100.0)).append("%\n");
         }
+        Util.print(output.toString(), outputPath);
     }
 
-    public static double run(String originProjectPath, String srcFilePath, String testName, String methodName,
+    public static double runProject(String originProjectPath, String srcFilePath, String testName, String methodName,
                              ArrayList<String> exEntry, ArrayList<String> exRet) {
         copyProject(originProjectPath, Util.COPY_PROJECT_PATH);
         StaticInfo stcInfo = StaticParser.Analyze(originProjectPath + srcFilePath, methodName);
@@ -86,15 +177,15 @@ public class Transverse {
 
     private static void runTest(String projectPath, String testName) {
         String command = "D: && cd " + projectPath + "&& mvn test -Dtest=" + testName;
-        LevelLogger.debug("RUN TEST : " + command);
+        LevelLogger.debug("RUN TEST : " + testName);
         try {
             Process process = Runtime.getRuntime().exec("cmd /c " + command);
             InputStream fis = process.getInputStream();
             InputStreamReader isr = new InputStreamReader(fis);
             BufferedReader br = new BufferedReader(isr);
-            String line;
-            while((line = br.readLine()) != null)
-                LevelLogger.debug(line);
+            //String line;
+            //while((line = br.readLine()) != null)
+            //    LevelLogger.debug(line);
             process.waitFor();
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
@@ -106,8 +197,7 @@ public class Transverse {
         String sourcePath = workPath + "\\patch.scala";
         String command1 = "scalac -cp " + Util.FIGARO_JAR_PATH + " -d " + workPath + " " + sourcePath;
         String command2 = "scala -cp " + workPath + ";" + Util.FIGARO_JAR_PATH + " patch";
-        LevelLogger.debug("COMPILE FIGARO SOURCE : " + command1);
-        LevelLogger.debug("RUN FIGARO SOURCE : " + command2);
+        LevelLogger.debug("GENERATE FIGARO RESULT");
 
         try {
             Process process = Runtime.getRuntime().exec("cmd /c " + command1 + " && " + command2);
