@@ -1,12 +1,9 @@
 package trans.trace;
 
-import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.*;
 import trans.common.Util;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.Map;
 
 public class TraceParser {
 
@@ -19,7 +16,7 @@ public class TraceParser {
     }
 
     @SuppressWarnings("unchecked")
-    public static String Analyze(String srcFile, String methodName) {
+    public static String analyze(String srcFile, String methodName) {
         CompilationUnit srcUnit = Util.genASTFromSource(srcFile, null);
         if (srcUnit == null)
             return "";

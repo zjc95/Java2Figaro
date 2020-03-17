@@ -1,6 +1,5 @@
 package trans.common;
 
-import com.mysql.cj.xdevapi.JsonArray;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
@@ -12,12 +11,15 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 import trans.dynamicUtils.DynamicInfo;
 import trans.dynamicUtils.DynamicParser;
+import trans.patchsim.PatchSimParser;
+import trans.patchsim.TraceList;
 import trans.staticUtils.StaticInfo;
 import trans.staticUtils.StaticParser;
 import trans.trace.TraceParser;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.List;
 
 public class Transverse {
     public static void runJsonFile(String workPath) {
@@ -35,13 +37,12 @@ public class Transverse {
     }
 
     private static void runJsonFileByProjectMutants(String workPath, JSONArray data, String outputPath) {
-        StringBuilder output = new StringBuilder();
+        StringBuilder finalResult = new StringBuilder();
         for (Object obj : data) {
             JSONObject jsonData = (JSONObject) obj;
 
             String projectName = (String) jsonData.get("project");
             String srcFilePath = (String) jsonData.get("source");
-            String testName = (String) jsonData.get("test");
             String methodName = (String) jsonData.get("method");
             JSONArray entryJSON = (JSONArray) jsonData.get("entry");
             JSONArray retJSON = (JSONArray) jsonData.get("return");
@@ -61,7 +62,6 @@ public class Transverse {
             StringBuilder bugInformation = new StringBuilder();
             bugInformation.append("project : ").append(projectName);
             bugInformation.append("srcFilePath : ").append(srcFilePath);
-            bugInformation.append("testName : ").append(testName);
             bugInformation.append("methodName : ").append(methodName);
             bugInformation.append("exEntry : ").append(exEntry);
             bugInformation.append("exRet : ").append(exRet);
@@ -79,31 +79,44 @@ public class Transverse {
                 continue;
 
             LevelLogger.debug("project : " + projectName);
+
+            //--------Get Test Lists---------
+            copyProject(sourceDirPath, Util.COPY_PROJECT_PATH);
+            runTest(Util.COPY_PROJECT_PATH, null);
+            ArrayList<String> testList = getTestCases(Util.COPY_PROJECT_PATH);
+            LevelLogger.debug(testList.toString());
+
+            LevelLogger.debug("Project : " + projectName);
+            finalResult.append("Project : ").append(projectName).append("\n");
+            ArrayList<Double> originResultList = new ArrayList<>();
+            ArrayList<TraceList> originTraceListArray = new ArrayList<>();
+            //--------Get Origin Project Result-----
+            for (String test : testList) {
+                TestCaseResult testCaseResult = runProjectTestCase(sourceDirPath, srcFilePath, test, methodName, exEntry, exRet);
+                LevelLogger.debug("Origin " + test + " : " + String.format("%.6f", testCaseResult._probability * 100.0) + "%");
+                originResultList.add(testCaseResult.getProbability());
+                originTraceListArray.add(testCaseResult.getTraceList());
+            }
+
             for (File mutantFile : mutantFiles) {
                 if (!mutantFile.getName().endsWith(".java"))
                     continue;
-                LevelLogger.debug("MutantFile : " + mutantFile.getName());
-                double probability = Transverse.runMutant(sourceDirPath, srcFilePath, mutantFile, testName, methodName, exEntry, exRet);
-                LevelLogger.debug("Result " + mutantFile.getName() + " : " + String.format("%.4f", probability * 100.0) + "%");
-                output.append(mutantFile.getName()).append(" : ").append(String.format("%.4f", probability * 100.0)).append("%\n");
-            }
-            output.append("\n");
-        }
-        Util.print(output.toString(), outputPath);
-    }
 
-    public static double runMutant(String originProjectPath, String srcFilePath, File mutantFile, String testName, String methodName,
-                                    ArrayList<String> exEntry, ArrayList<String> exRet) {
-        copyProject(originProjectPath, Util.COPY_PROJECT_PATH);
-        Util.copyFile(mutantFile, Util.COPY_PROJECT_PATH + srcFilePath);
-        StaticInfo stcInfo = StaticParser.Analyze(Util.COPY_PROJECT_PATH + srcFilePath, methodName);
-        String traceCode = TraceParser.Analyze(Util.COPY_PROJECT_PATH + srcFilePath, methodName);
-        Util.print(traceCode, Util.COPY_PROJECT_PATH + srcFilePath);
-        addDependencyToPom(Util.COPY_PROJECT_PATH);
-        runTest(Util.COPY_PROJECT_PATH, testName);
-        DynamicInfo dycInfo = DynamicParser.Analyze(Util.JSON_FILE_PATH, stcInfo, exEntry, exRet);
-        Util.print(dycInfo.genFigaroSource(), Util.FIGARO_FILE_PATH);
-        return runFigaroProgram(Util.COPY_PROJECT_PATH);
+                ArrayList<Double> patchResultList = new ArrayList<>();
+                ArrayList<TraceList> patchTraceListArray = new ArrayList<>();
+                LevelLogger.debug("MutantFile : " + mutantFile.getName());
+                for (String test : testList) {
+                    TestCaseResult testCaseResult = runMutantTestCase(sourceDirPath, srcFilePath, mutantFile, test, methodName, exEntry, exRet);
+                    LevelLogger.debug(mutantFile.getName() + " " + test + " : " + String.format("%.6f", testCaseResult._probability * 100.0) + "%");
+                    patchResultList.add(testCaseResult.getProbability());
+                    patchTraceListArray.add(testCaseResult.getTraceList());
+                }
+                finalResult.append("Patch ").append(mutantFile.getName()).append(" : ").append(genMultiTestResult(originResultList, patchResultList)).append("\n");
+                boolean patchSimResult = PatchSimParser.analyze(originTraceListArray, patchTraceListArray);
+                finalResult.append("Patch-Sim Result : ").append(patchSimResult ? "correct" : "incorrect").append("\n");
+            }
+        }
+        Util.print(finalResult.toString(), outputPath);
     }
 
     private static void runJsonFileByProjectList(JSONArray data, String outputPath) {
@@ -140,26 +153,119 @@ public class Transverse {
             bugInformation.append("---------------------------------------------");
             //LevelLogger.debug(bugInformation);
 
-            double probability = Transverse.runProject(projectPath, srcFilePath, testName, methodName, exEntry, exRet);
+            TestCaseResult testCaseResult = Transverse.runProjectTestCase(projectPath, srcFilePath, testName, methodName, exEntry, exRet);
 
             String[] projectPathFragment = projectPath.split("\\\\");
             String projectName = projectPathFragment[projectPathFragment.length - 1];
-            output.append(projectName).append(" : ").append(String.format("%.4f", probability * 100.0)).append("%\n");
+            output.append(projectName).append(" : ").append(String.format("%.4f", testCaseResult.getProbability() * 100.0)).append("%\n");
         }
         Util.print(output.toString(), outputPath);
     }
 
-    public static double runProject(String originProjectPath, String srcFilePath, String testName, String methodName,
-                             ArrayList<String> exEntry, ArrayList<String> exRet) {
+    private static TestCaseResult runMutantTestCase(String originProjectPath, String srcFilePath, File mutantFile, String testName, String methodName,
+                                            ArrayList<String> exEntry, ArrayList<String> exRet) {
+        //-----Copy Project-----
+        String copySrcFilePath = Util.COPY_PROJECT_PATH + srcFilePath;
         copyProject(originProjectPath, Util.COPY_PROJECT_PATH);
-        StaticInfo stcInfo = StaticParser.Analyze(originProjectPath + srcFilePath, methodName);
-        String traceCode = TraceParser.Analyze(originProjectPath + srcFilePath, methodName);
-        Util.print(traceCode, Util.COPY_PROJECT_PATH + srcFilePath);
+        Util.copyFile(mutantFile, copySrcFilePath);
+
+        //-----Run Trace-----
+        StaticInfo stcInfo = StaticParser.Analyze(copySrcFilePath, methodName);
+        String traceCode = TraceParser.analyze(copySrcFilePath, methodName);
+        Util.print(traceCode, copySrcFilePath);
         addDependencyToPom(Util.COPY_PROJECT_PATH);
-        runTest(Util.COPY_PROJECT_PATH, testName);
+        boolean testResult = runTest(Util.COPY_PROJECT_PATH, testName);
+
+        //-----Generate Figaro Result-----
         DynamicInfo dycInfo = DynamicParser.Analyze(Util.JSON_FILE_PATH, stcInfo, exEntry, exRet);
         Util.print(dycInfo.genFigaroSource(), Util.FIGARO_FILE_PATH);
-        return runFigaroProgram(Util.COPY_PROJECT_PATH);
+        double probability = runFigaroProgram(Util.COPY_PROJECT_PATH);
+        return new TestCaseResult(dycInfo, probability, testResult);
+    }
+
+    public static TestCaseResult runProjectTestCase(String originProjectPath, String srcFilePath, String testName, String methodName,
+                                            ArrayList<String> exEntry, ArrayList<String> exRet) {
+        //-----Copy Project-----
+        String copySrcFilePath = Util.COPY_PROJECT_PATH + srcFilePath;
+        copyProject(originProjectPath, Util.COPY_PROJECT_PATH);
+
+        //-----Run Trace-----
+        StaticInfo stcInfo = StaticParser.Analyze(copySrcFilePath, methodName);
+        String traceCode = TraceParser.analyze(copySrcFilePath, methodName);
+        Util.print(traceCode, Util.COPY_PROJECT_PATH + srcFilePath);
+        addDependencyToPom(Util.COPY_PROJECT_PATH);
+        boolean testResult = runTest(Util.COPY_PROJECT_PATH, testName);
+
+        //-----Generate Figaro Result-----
+        DynamicInfo dycInfo = DynamicParser.Analyze(Util.JSON_FILE_PATH, stcInfo, exEntry, exRet);
+        Util.print(dycInfo.genFigaroSource(), Util.FIGARO_FILE_PATH);
+        double probability = runFigaroProgram(Util.COPY_PROJECT_PATH);
+        return new TestCaseResult(dycInfo, probability, testResult);
+    }
+
+    public static void genMultiTestResultByFiles (String resultFilePath) {
+        String result = Util.readFileToString(resultFilePath);
+        String[] resultList = result.split("\n");
+        String patchID = "Origin";
+        ArrayList<Double> originTestResult = new ArrayList<>();
+        ArrayList<Double> patchTestResult = new ArrayList<>();
+
+        for (String line : resultList) {
+            if (line.contains("#")) {
+                String resultValueString = line.split(" ")[2].split("%")[0];
+                double value = Double.parseDouble(resultValueString) / 100.0;
+                if (patchID.equals("Origin"))
+                    originTestResult.add(value);
+                else
+                    patchTestResult.add(value);
+            }
+            if (line.contains(".java")) {
+                if (patchTestResult.size() == originTestResult.size())
+                    System.out.println("Patch " + patchID + " Final Result : " + genMultiTestResult(originTestResult, patchTestResult));
+                patchTestResult.clear();
+                patchID = line.split("\\.")[0];
+            }
+        }
+        if (patchTestResult.size() == originTestResult.size())
+            System.out.println("Patch " + patchID + " Final Result : " + genMultiTestResult(originTestResult, patchTestResult));
+    }
+
+    private static double genMultiTestResult(ArrayList<Double> originResultList, ArrayList<Double> patchResultList) {
+        int numTest = originResultList.size();
+        //System.out.println("Origin " + originResultList.toString());
+        //System.out.println("patch " + patchResultList.toString());
+        double result = 0.0;
+        for (int binary = 0; binary < (1 << (numTest * 2)); binary++) {
+            double rate = 1.0;
+            int numOriginPass = 0;
+            int numPatchPassWhenOriginFail = 0;
+            int numPatchFailWhenOriginPass = 0;
+
+            for (int i = 0; i < numTest; i++) {
+                if ((binary & (1 << i)) > 0) {
+                    rate *= originResultList.get(i);
+                    numOriginPass++;
+                    if ((binary & (1 << (i + numTest))) == 0)
+                        numPatchFailWhenOriginPass++;
+                }
+                else {
+                    rate *= 1 - originResultList.get(i);
+                    if ((binary & (1 << (i + numTest))) > 0)
+                        numPatchPassWhenOriginFail++;
+                }
+
+                if ((binary & (1 << (i + numTest))) > 0)
+                    rate *= patchResultList.get(i);
+                else
+                    rate *= 1 - patchResultList.get(i);
+            }
+            //System.out.println(binary + " " + numOriginPass + " " + numPatchPassWhenOriginFail + " " + numPatchFailWhenOriginPass);
+
+            double tmpValue1 = numOriginPass == numTest ? 0.0 : (double) numPatchPassWhenOriginFail / (numTest - numOriginPass);
+            double tmpValue2 = numOriginPass == 0 ? 0.0 : (double) numPatchFailWhenOriginPass / numOriginPass;
+            result += rate * (tmpValue1 - Util.ALPHA * tmpValue2);
+        }
+        return result;
     }
 
     private static void copyProject(String projectPath, String copyPath) {
@@ -175,21 +281,61 @@ public class Transverse {
         }
     }
 
-    private static void runTest(String projectPath, String testName) {
-        String command = "D: && cd " + projectPath + "&& mvn test -Dtest=" + testName;
-        LevelLogger.debug("RUN TEST : " + testName);
+    static class TestCaseResult {
+        private DynamicInfo _dynamicInfo;
+        private double _probability;
+        private boolean _isPass;
+
+        TestCaseResult(DynamicInfo dynamicInfo, double probability, boolean isPass) {
+            _dynamicInfo = dynamicInfo;
+            _probability = probability;
+            _isPass = isPass;
+        }
+
+        TraceList getTraceList() {
+            if (_dynamicInfo != null)
+                return _dynamicInfo.genTraceList(_isPass);
+            return null;
+        }
+
+        double getProbability() {
+            if (_isPass) return _probability;
+            return 0.0;
+        }
+    }
+
+    private static boolean runTest(String projectPath, String testName) {
+        String command;
+        switch (projectPath.charAt(0)) {
+            case 'D' : command = "D: && cd " + projectPath + "&& mvn test"; break;
+            case 'E' : command = "E: && cd " + projectPath + "&& mvn test"; break;
+            case 'F' : command = "F: && cd " + projectPath + "&& mvn test"; break;
+            case 'G' : command = "G: && cd " + projectPath + "&& mvn test"; break;
+            default: command = "cd " + projectPath + "&& mvn test";
+        }
+        if (testName != null) {
+            command += " -Dtest=" + testName;
+            LevelLogger.debug("RUN TEST : " + testName);
+        }
+        boolean ret = false;
         try {
             Process process = Runtime.getRuntime().exec("cmd /c " + command);
             InputStream fis = process.getInputStream();
             InputStreamReader isr = new InputStreamReader(fis);
             BufferedReader br = new BufferedReader(isr);
-            //String line;
-            //while((line = br.readLine()) != null)
-            //    LevelLogger.debug(line);
+            String line;
+            while((line = br.readLine()) != null) {
+                if (line.contains("BUILD FAILURE"))
+                    ret = false;
+                if (line.contains("BUILD SUCCESS"))
+                    ret = true;
+                //LevelLogger.debug(line);
+            }
             process.waitFor();
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
+        return ret;
     }
 
     private static double runFigaroProgram(String workPath) {
@@ -218,9 +364,36 @@ public class Transverse {
         return retValue;
     }
 
-    private static void addDependencyToPom(String projectDir) {
+    private static ArrayList<String> getTestCases(String projectPath) {
+        ArrayList<String> testList = new ArrayList<>();
+        File reportDir = new File(projectPath + "\\target\\surefire-reports");
+        if (!reportDir.exists())
+            return testList;
+        File[] reportFiles = reportDir.listFiles();
+        if (reportFiles == null)
+            return testList;
+
+        for (File file : reportFiles) {
+            if (!file.getName().endsWith(".xml")) continue;
+            try {
+                Document document = new SAXReader().read(file);
+                Element rootNode = document.getRootElement();
+                List<Element> rootNodeList = rootNode.elements("testcase");
+                for (Element element : rootNodeList){
+                    String className = element.attributeValue("classname");
+                    String testName = element.attributeValue("name");
+                    testList.add(className + "#" + testName);
+                }
+            } catch (DocumentException e) {
+                e.printStackTrace();
+            }
+        }
+        return testList;
+    }
+
+    private static void addDependencyToPom(String projectPath) {
         try {
-            File pomFile = new File(projectDir + "\\pom.xml");
+            File pomFile = new File(projectPath + "\\pom.xml");
             Document document = new SAXReader().read(pomFile);
             Element rootNode = document.getRootElement();
             Element dependenciesNode = rootNode.element("dependencies");

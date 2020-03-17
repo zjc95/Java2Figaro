@@ -1,5 +1,6 @@
 package trans.dynamicUtils;
 
+import trans.patchsim.TraceList;
 import trans.staticUtils.*;
 import trans.common.LevelLogger;
 
@@ -30,6 +31,10 @@ public class DynamicInfo {
         _json = json;
         _exEntry.addAll(exEntry);
         _exRet.addAll(exRet);
+    }
+
+    public TraceList genTraceList(boolean isPass) {
+        return new TraceList(_msgList, isPass);
     }
     
     /***************Dynamic Inform Parse*********************/

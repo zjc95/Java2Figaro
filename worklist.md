@@ -22,15 +22,15 @@
 	- 实现 Figaro 程序编译及执行 ✅
 	
 - 添加其他策略 (__2020.2.28__)
-  - 策略：执行到判断语句 a>b 的时候，若 a==b 则认为该判断语句可能出错 ✅
-  - 策略：在非循环结构中对同一变量多次赋值，则认为该变量可能出错
-  - 策略：若出口变量未关联全部入口变量，则认为出口变量可能出错
+  - 策略：执行到判断语句 a>b 的时候，若 a==b 则认为该判断语句可能出错 ✅ 
+  - 策略：在非循环结构中对同一变量多次赋值，则认为该变量可能出错 ✅
+  - 策略：若出口变量未关联全部入口变量，则认为出口变量可能出错 ✅
   - 策略：若对某变量使用常数赋值，则该变量可能出错 ✅
   - 策略：根据类结构确定变量与域正确概率关系 ✅
 
 - 初步实验结果（__2020.3.10__)
-  - 根据Genpat的数据集提取FP修复
-  - 根据patch进行试验
+  - 根据Genpat的数据集提取FP修复 ✅
+  - 根据patch进行实验 ✅
 
 - 参数统计与选择（最后实现，目前可以人工定义）
 
@@ -77,6 +77,9 @@ AST: GenPat
 APR tools: astor
 
 Dump: StateBasedFL StateCoverLocator
+
+java -cp .\btrace-client.jar;.\tools.jar com.sun.btrace.compiler.Compiler AllLines.java
+-Djvmargs=-javaagent:D:\program\workspace\Java2FigaroData\tmp\btrace\btrace-agent.jar=noserver,debug=true,scriptOutputFile=D:\program\workspace\Java2FigaroData\tmp\btrace\output.txt,script=D:\program\workspace\Java2FigaroData\tmp\btrace\AllLines.class
 
 ------------git命令--------------
 

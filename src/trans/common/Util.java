@@ -12,6 +12,7 @@ import java.util.Map;
 
 public class Util {
     public static final int JAVA_LEVEL = AST.JLS8;
+    public static final double ALPHA = 0.8;
     public static final String JAVA_VERSION = JavaCore.VERSION_1_8;
     public static final String LIBRARY_PATH = System.getProperty("user.dir") + "\\lib";
     public static final String FIGARO_JAR_PATH = LIBRARY_PATH + "\\figaro_2.12-5.0.0.0.jar";

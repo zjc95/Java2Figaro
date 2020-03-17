@@ -1,5 +1,7 @@
 package trans.common;
 
+import trans.patchsim.PatchSimParser;
+
 import java.util.ArrayList;
 
 public class Demo {
@@ -8,9 +10,19 @@ public class Demo {
         runJsonFile();
     }
 
+    private static void runPatchSimByFiles() {
+        String workPath = "D:\\program\\workspace\\Java2FigaroData";
+        PatchSimParser.analyzeByFiles(workPath);
+    }
+
     private static void runJsonFile() {
         String workPath = "D:\\program\\workspace\\Java2FigaroData";
         Transverse.runJsonFile(workPath);
+    }
+
+    private static void runFinalResultGenerate() {
+        String resultFilePath = "D:\\program\\workspace\\Java2FigaroData\\output.txt";
+        Transverse.genMultiTestResultByFiles(resultFilePath);
     }
 
     private static void runProject1() {
@@ -25,8 +37,8 @@ public class Demo {
         exEntry.add("output");
         exRet.add("output");
 
-        Double probability = Transverse.runProject(originProjectPath, srcFilePath, testName, methodName, exEntry, exRet);
-        System.out.println(String.format("%.4f", probability * 100.0));
+        Transverse.TestCaseResult testCaseResult = Transverse.runProjectTestCase(originProjectPath, srcFilePath, testName, methodName, exEntry, exRet);
+        System.out.println(String.format("%.4f", testCaseResult.getProbability() * 100.0));
     }
 
     public static void runProject2() {
@@ -41,8 +53,8 @@ public class Demo {
         exEntry.add("output");
         exRet.add("output");
 
-        Double probability = Transverse.runProject(originProjectPath, srcFilePath, testName, methodName, exEntry, exRet);
-        System.out.println(String.format("%.4f", probability * 100.0));
+        Transverse.TestCaseResult testCaseResult = Transverse.runProjectTestCase(originProjectPath, srcFilePath, testName, methodName, exEntry, exRet);
+        System.out.println(String.format("%.4f", testCaseResult.getProbability() * 100.0));
     }
 
     public static void parseResult() {
