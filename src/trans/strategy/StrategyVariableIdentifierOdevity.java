@@ -8,9 +8,9 @@ import java.util.ArrayList;
 
 public class StrategyVariableIdentifierOdevity extends Strategy{
 
-    private Pair<String, Double> checkOdevity(String def, String figaroID, String str) {
+    private Pair<String, Double> checkOdevity(String def, String figaroID, String string) {
         try {
-            int val = Integer.parseInt(str);
+            int val = Integer.parseInt(string);
 
             if (def.endsWith("odd") || def.endsWith("Odd"))
                 if (val % 2 == 0) return new Pair<>(figaroID, 0.2);

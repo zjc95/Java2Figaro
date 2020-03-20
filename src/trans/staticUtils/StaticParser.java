@@ -1,26 +1,26 @@
 package trans.staticUtils;
 
+import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
 
-import trans.common.LevelLogger;
 import trans.common.Util;
 import org.eclipse.jdt.core.dom.*;
 
 public class StaticParser {
-    public static StaticInfo Analyze(String srcFile) {
-        return Analyze(srcFile, null);
+    public static StaticInfo analyze(File srcFile) {
+        return analyze(srcFile, null);
     }
 
-    public static StaticInfo Analyze(String srcFile, String methodName) {
+    public static StaticInfo analyze(File srcFile, String methodName) {
         CompilationUnit srcUnit = Util.genASTFromSource(srcFile, null);
         if (srcUnit == null)
             return null;
 
-        MethodDeclCollector methodDeclCollector = new MethodDeclCollector();
-        methodDeclCollector.init();
-        srcUnit.accept(methodDeclCollector);
-        List<MethodDeclaration> srcMethods = methodDeclCollector.getAllMethDecl();
+        MethodDeclarationCollector methodDeclarationCollector = new MethodDeclarationCollector();
+        methodDeclarationCollector.init();
+        srcUnit.accept(methodDeclarationCollector);
+        List<MethodDeclaration> srcMethods = methodDeclarationCollector.getAllMethodDeclarations();
 
         StaticInfo info = new StaticInfo();
 
@@ -35,18 +35,18 @@ public class StaticParser {
         return info;
     }
 
-    static class MethodDeclCollector extends ASTVisitor {
+    static class MethodDeclarationCollector extends ASTVisitor {
 
         List<MethodDeclaration> methodDeclarations;
 
-        MethodDeclCollector() {
+        MethodDeclarationCollector() {
         }
 
         void init() {
             methodDeclarations = new LinkedList<>();
         }
 
-        List<MethodDeclaration> getAllMethDecl() {
+        List<MethodDeclaration> getAllMethodDeclarations() {
             return methodDeclarations;
         }
 

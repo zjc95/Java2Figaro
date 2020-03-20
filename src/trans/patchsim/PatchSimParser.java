@@ -7,7 +7,6 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 
 public class PatchSimParser {
 
@@ -26,18 +25,17 @@ public class PatchSimParser {
         return f[originSize%2][patchSize];
     }
 
-    private static void print(ArrayList<TraceList> originTraceLists, String filePath) {
+    private static void print(ArrayList<TraceList> originTraceLists, File outputFile) {
         for (TraceList traceList : originTraceLists) {
             for (int i = 0; i < traceList.size(); i++)
-                Util.write(traceList.get(i), filePath, true);
-            Util.write(traceList.checkPass() ? "true" : "false", filePath, true);
+                Util.write(traceList.get(i), outputFile, true);
+            Util.write(traceList.checkPass() ? "true" : "false", outputFile, true);
         }
     }
 
-    private static ArrayList<TraceList> loadTraceList(String filePath) {
+    private static ArrayList<TraceList> loadTraceList(File file) {
         ArrayList<TraceList> traceLists = new ArrayList<>();
         try {
-            File file = new File(filePath);
             InputStream in = new FileInputStream(file);
             InputStreamReader inputStreamReader = new InputStreamReader(in, StandardCharsets.UTF_8);
             BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
@@ -60,15 +58,15 @@ public class PatchSimParser {
         return traceLists;
     }
 
-    public static boolean analyzeByFiles(String workPath) {
-        ArrayList<TraceList> originTraceLists = loadTraceList(workPath + "\\originTrace.txt");
-        ArrayList<TraceList> patchTraceLists = loadTraceList(workPath + "\\patchTrace.txt");
-        /*System.out.println("Origin\n------------------");
+    public static boolean analyzeByFiles(File workDirectory) {
+        ArrayList<TraceList> originTraceLists = loadTraceList(new File(workDirectory, "originTrace.txt"));
+        ArrayList<TraceList> patchTraceLists = loadTraceList(new File(workDirectory, "patchTrace.txt"));
+        /*System.out.println("Origin");
         for (TraceList traceList : originTraceLists) {
             traceList.print();
             System.out.println("------------------");
         }
-        System.out.println("Patch\n------------------");
+        System.out.println("Patch");
         for (TraceList traceList : patchTraceLists) {
             traceList.print();
             System.out.println("------------------");

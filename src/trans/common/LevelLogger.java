@@ -7,7 +7,7 @@ import org.apache.log4j.PropertyConfigurator;
 import java.io.File;
 
 public class LevelLogger {
-    private final static String confile = "resources/log4j.properties";
+    private final static String confile = "resources\\log4j.properties";
 
     private static Logger logger_;
 

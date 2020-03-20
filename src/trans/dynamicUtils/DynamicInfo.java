@@ -15,22 +15,21 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class DynamicInfo {
-    private StaticInfo _stcInfo;
+    private StaticInfo _staticInfo;
     private JSONObject _json;
-    private ArrayList<String> _exEntry = new ArrayList<>();
-    private ArrayList<String> _exRet = new ArrayList<>();
+    private ArrayList<String> _exEntryList = new ArrayList<>();
+    private ArrayList<String> _exRetList = new ArrayList<>();
 
     DynamicInfo(StaticInfo stcInfo, JSONObject json) {
-        _stcInfo = stcInfo;
+        _staticInfo = stcInfo;
         _json = json;
     }
 
-
     DynamicInfo(StaticInfo stcInfo, JSONObject json, ArrayList<String> exEntry, ArrayList<String> exRet) {
-        _stcInfo = stcInfo;
+        _staticInfo = stcInfo;
         _json = json;
-        _exEntry.addAll(exEntry);
-        _exRet.addAll(exRet);
+        _exEntryList.addAll(exEntry);
+        _exRetList.addAll(exRet);
     }
 
     public TraceList genTraceList(boolean isPass) {
@@ -41,20 +40,20 @@ public class DynamicInfo {
     private ArrayList<DynamicMsg> _msgList = new ArrayList<>();
     private Map<String, DynamicStmt> _structureMap = new HashMap<>();
     private Map<String, ArrayList<Pair<VarNode, String>>> _varFieldMap = new HashMap<>();
-    private Map<String, Integer> _varDefTime = new HashMap<>();
-    private Map<String, Integer> _stmtDefTime = new HashMap<>();
-    private Map<String, Integer> _controlDefTime = new HashMap<>();
+    private Map<String, Integer> _varDefTimeMap = new HashMap<>();
+    private Map<String, Integer> _stmtDefTimeMap = new HashMap<>();
+    private Map<String, Integer> _controlDefTimeMap = new HashMap<>();
     private ArrayList<DynamicCtrlExpr> _controlList = new ArrayList<>();
-    private ArrayList<Pair<String, Double>> _varObservation = new ArrayList<>();
+    private ArrayList<Pair<String, Double>> _varObservationList = new ArrayList<>();
 
     void parse() {
-        for (String str : _exEntry) {
+        for (String str : _exEntryList) {
             _msgList.add(new DynamicEntry(this, str));
         }
 
-        JSONArray data = (JSONArray) _json.get("data");
-        for (Object obj : data) {
-            JSONObject jsonMsg = (JSONObject) obj;
+        JSONArray dataList = (JSONArray) _json.get("data");
+        for (Object data : dataList) {
+            JSONObject jsonMsg = (JSONObject) data;
             Long line = (Long) jsonMsg.get("line");
             Long column = (Long) jsonMsg.get("column");
             String type = (String) jsonMsg.get("type");
@@ -63,7 +62,7 @@ public class DynamicInfo {
         }
 
         if (!(_msgList.get(_msgList.size()-1) instanceof DynamicRet)) {
-            _msgList.add(new DynamicRet(this, _exRet));
+            _msgList.add(new DynamicRet(this, _exRetList));
         }
 
         for (DynamicMsg msg : _msgList)
@@ -72,13 +71,13 @@ public class DynamicInfo {
 
         Strategy stgGather = new Strategy();
         stgGather.init();
-        _varObservation = stgGather.parse(_msgList);
+        _varObservationList = stgGather.parse(_msgList);
     }
 
     private void addMessage(int line, int column, String type, Object value) {
         switch (type) {
             case "ASSIGN":
-                Assign assign = _stcInfo.getAssign(line, column);
+                Assign assign = _staticInfo.getAssign(line, column);
                 if (assign == null)
                     LevelLogger.error("JSON INFORMATION ASSIGN NOT FOUND : line " + line + ", column " + column);
                 if (!(value instanceof String))
@@ -86,7 +85,7 @@ public class DynamicInfo {
                 _msgList.add(new DynamicAssign(this, line, column, assign, (String)value));
                 break;
             case "ENTRY":
-                Assign entry = _stcInfo.getAssign(line, column);
+                Assign entry = _staticInfo.getAssign(line, column);
                 if (entry == null)
                     LevelLogger.error("JSON INFORMATION ENTRY NOT FOUND : line " + line + ", column " + column);
                 if (!(value instanceof String))
@@ -94,15 +93,15 @@ public class DynamicInfo {
                 _msgList.add(new DynamicEntry(this, line, column, entry, (String)value));
                 break;
             case "RET":
-                Stmt ret = _stcInfo.getStmt(line, column);
+                Stmt ret = _staticInfo.getStmt(line, column);
                 if (ret == null)
                     LevelLogger.error("JSON INFORMATION RET NOT FOUND : line " + line + ", column " + column);
                 if (!(value instanceof String))
                     LevelLogger.error("JSON INFORMATION ASSIGN VALUE ERROR : line " + line + ", column " + column);
-                _msgList.add(new DynamicRet(this, line, column, ret, (String)value, _exRet));
+                _msgList.add(new DynamicRet(this, line, column, ret, (String)value, _exRetList));
                 break;
             case "CONTROL":
-                ControlExpression ctrl = _stcInfo.getCtrlExpr(line, column);
+                ControlExpression ctrl = _staticInfo.getCtrlExpr(line, column);
                 if (ctrl == null)
                     LevelLogger.error("JSON INFORMATION CONTROL EXPRESSION NOT FOUND : line " + line + ", column " + column);
                 if (!(value instanceof String))
@@ -116,7 +115,7 @@ public class DynamicInfo {
                 }
                 break;
             case "STMT":
-                Stmt stmt = _stcInfo.getStmt(line, column);
+                Stmt stmt = _staticInfo.getStmt(line, column);
                 if (stmt == null)
                     LevelLogger.error("JSON INFORMATION STMT NOT FOUND : line " + line + ", column " + column);
                 _msgList.add(new DynamicStmt(this, line, column, stmt));
@@ -131,11 +130,11 @@ public class DynamicInfo {
         String varID = var.getID();
         int varTime = 0;
 
-        if (_varDefTime.containsKey(varName)) {
-            varTime = _varDefTime.get(varName);
+        if (_varDefTimeMap.containsKey(varName)) {
+            varTime = _varDefTimeMap.get(varName);
             if (isDef) {
                 varTime = varTime + 1;
-                _varDefTime.put(varName, varTime);
+                _varDefTimeMap.put(varName, varTime);
             }
         }
         else {
@@ -143,7 +142,7 @@ public class DynamicInfo {
                 LevelLogger.warn("WARNING : Use Without Define : " + varID);
                 return null;
             }
-            _varDefTime.put(varName, 0);
+            _varDefTimeMap.put(varName, 0);
         }
 
         return "Var_" + varName + (varTime == 0 ? "" : "_" + varTime);
@@ -204,12 +203,12 @@ public class DynamicInfo {
         return _structureMap.get(stmt.getKey());
     }
 
-    void setStructure(Stmt stmt, DynamicStmt dycStmt) {
-        _structureMap.put(stmt.getKey(), dycStmt);
+    void setStructure(Stmt stmt, DynamicStmt dynamicStmt) {
+        _structureMap.put(stmt.getKey(), dynamicStmt);
     }
 
-    void addCtrlExpr(DynamicCtrlExpr ctrl) {
-        _controlList.add(ctrl);
+    void addCtrlExpr(DynamicCtrlExpr dynamicCtrlExpr) {
+        _controlList.add(dynamicCtrlExpr);
     }
 
     ArrayList<DynamicCtrlExpr> getCtrlList() {
@@ -218,25 +217,25 @@ public class DynamicInfo {
         return newList;
     }
 
-    String genStmtFigaroID(DynamicStmt dycStmt) {
-        String key = dycStmt.getKey();
-        if (_stmtDefTime.containsKey(key)) {
-            int ctrlTime = _stmtDefTime.get(key) + 1;
-            _stmtDefTime.put(key, ctrlTime);
+    String genStmtFigaroID(DynamicStmt dynamicStmt) {
+        String key = dynamicStmt.getKey();
+        if (_stmtDefTimeMap.containsKey(key)) {
+            int ctrlTime = _stmtDefTimeMap.get(key) + 1;
+            _stmtDefTimeMap.put(key, ctrlTime);
             return "Stmt_" + key + "_" + ctrlTime;
         }
-        _stmtDefTime.put(key, 0);
+        _stmtDefTimeMap.put(key, 0);
         return "Stmt_" + key;
     }
 
-    String genCtrlFigaroID(DynamicCtrlExpr dycCtrl) {
-        String key = dycCtrl.getKey();
-        if (_controlDefTime.containsKey(key)) {
-            int ctrlTime = _controlDefTime.get(key) + 1;
-            _controlDefTime.put(key, ctrlTime);
+    String genCtrlFigaroID(DynamicCtrlExpr dynamicCtrlExpr) {
+        String key = dynamicCtrlExpr.getKey();
+        if (_controlDefTimeMap.containsKey(key)) {
+            int ctrlTime = _controlDefTimeMap.get(key) + 1;
+            _controlDefTimeMap.put(key, ctrlTime);
             return "Control_" + key + "_" + ctrlTime;
         }
-        _controlDefTime.put(key, 0);
+        _controlDefTimeMap.put(key, 0);
         return "Control_" + key;
     }
 
@@ -268,7 +267,7 @@ public class DynamicInfo {
         _source.append("\n");
 
         _source.append("    //-------------Constraint--------------\n");
-        for (Pair<String, Double> it : _varObservation) {
+        for (Pair<String, Double> it : _varObservationList) {
             _source.append("    ");
             _source.append(it.getKey());
             _source.append(".addConstraint((b: Boolean) => if (b) ");

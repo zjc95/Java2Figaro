@@ -14,60 +14,56 @@ public class DemoTest {
 
     @Test
     public void testWithoutIf() {
-        String srcFile = System.getProperty("user.dir") + "\\resources\\test.java";
-        String jsonFile = System.getProperty("user.dir") + "\\resources\\test.json";
-        String outFile = System.getProperty("user.dir") + "\\resources\\test.scala";
-        StaticInfo stcInfo = StaticParser.Analyze(srcFile);
-        DynamicInfo dycInfo = DynamicParser.Analyze(jsonFile, stcInfo);
-        print(dycInfo.genFigaroSource(), outFile);
+        File resourceDirectory = new File(System.getProperty("user.dir"), "resources");
+        File srcFile = new File(resourceDirectory, "test.java");
+        File jsonFile = new File(resourceDirectory, "test.json");
+        File outFile = new File(resourceDirectory, "test.scala");
+        StaticInfo stcInfo = StaticParser.analyze(srcFile);
+        DynamicInfo dycInfo = DynamicParser.analyze(jsonFile, stcInfo);
+        Util.write(dycInfo.genFigaroSource(), outFile, false);
     }
 
     @Test
     public void testWithIf1() {
-        String srcFile = System.getProperty("user.dir") + "\\resources\\testIF.java";
-        String jsonFile = System.getProperty("user.dir") + "\\resources\\testIF1.json";
-        String outFile = System.getProperty("user.dir") + "\\resources\\testIF1.scala";
-        StaticInfo stcInfo = StaticParser.Analyze(srcFile);
-        DynamicInfo dycInfo = DynamicParser.Analyze(jsonFile, stcInfo);
-        print(dycInfo.genFigaroSource(), outFile);
+        File resourceDirectory = new File(System.getProperty("user.dir"), "resources");
+        File srcFile = new File(resourceDirectory, "testIF.java");
+        File jsonFile = new File(resourceDirectory, "testIF1.json");
+        File outFile = new File(resourceDirectory, "testIF1.scala");
+        StaticInfo stcInfo = StaticParser.analyze(srcFile);
+        DynamicInfo dycInfo = DynamicParser.analyze(jsonFile, stcInfo);
+        Util.write(dycInfo.genFigaroSource(), outFile, false);
     }
 
     @Test
     public void testWithIf2() {
-        String srcFile = System.getProperty("user.dir") + "\\resources\\testIF.java";
-        String jsonFile = System.getProperty("user.dir") + "\\resources\\testIF2.json";
-        String outFile = System.getProperty("user.dir") + "\\resources\\testIF2.scala";
-        StaticInfo stcInfo = StaticParser.Analyze(srcFile);
-        DynamicInfo dycInfo = DynamicParser.Analyze(jsonFile, stcInfo);
-        print(dycInfo.genFigaroSource(), outFile);
+        File resourceDirectory = new File(System.getProperty("user.dir"), "resources");
+        File srcFile = new File(resourceDirectory, "testIF.java");
+        File jsonFile = new File(resourceDirectory, "testIF2.json");
+        File outFile = new File(resourceDirectory, "testIF2.scala");
+        StaticInfo stcInfo = StaticParser.analyze(srcFile);
+        DynamicInfo dycInfo = DynamicParser.analyze(jsonFile, stcInfo);
+        Util.write(dycInfo.genFigaroSource(), outFile, false);
     }
 
     @Test
     public void testWithIf3() {
-        String srcFile = System.getProperty("user.dir") + "\\resources\\testIF.java";
-        String jsonFile = System.getProperty("user.dir") + "\\resources\\testIF3.json";
-        String outFile = System.getProperty("user.dir") + "\\resources\\testIF3.scala";
-        StaticInfo stcInfo = StaticParser.Analyze(srcFile);
-        DynamicInfo dycInfo = DynamicParser.Analyze(jsonFile, stcInfo);
-        print(dycInfo.genFigaroSource(), outFile);
+        File resourceDirectory = new File(System.getProperty("user.dir"), "resources");
+        File srcFile = new File(resourceDirectory, "testIF.java");
+        File jsonFile = new File(resourceDirectory, "testIF3.json");
+        File outFile = new File(resourceDirectory, "testIF3.scala");
+        StaticInfo stcInfo = StaticParser.analyze(srcFile);
+        DynamicInfo dycInfo = DynamicParser.analyze(jsonFile, stcInfo);
+        Util.write(dycInfo.genFigaroSource(), outFile, false);
     }
 
     @Test
     public void testWithField() {
-        String srcFile = System.getProperty("user.dir") + "\\resources\\testField.java";
-        String jsonFile = System.getProperty("user.dir") + "\\resources\\testField.json";
-        String outFile = System.getProperty("user.dir") + "\\resources\\testField.scala";
-        StaticInfo stcInfo = StaticParser.Analyze(srcFile);
-        DynamicInfo dycInfo = DynamicParser.Analyze(jsonFile, stcInfo);
-        print(dycInfo.genFigaroSource(), outFile);
-    }
-
-    private static void print(String str, String outFile) {
-        File file = new File(outFile);
-        try (PrintWriter output = new PrintWriter(file)) {
-            output.print(str);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        File resourceDirectory = new File(System.getProperty("user.dir"), "resources");
+        File srcFile = new File(resourceDirectory, "testField.java");
+        File jsonFile = new File(resourceDirectory, "testField.json");
+        File outFile = new File(resourceDirectory, "testField.scala");
+        StaticInfo stcInfo = StaticParser.analyze(srcFile);
+        DynamicInfo dycInfo = DynamicParser.analyze(jsonFile, stcInfo);
+        Util.write(dycInfo.genFigaroSource(), outFile, false);
     }
 }

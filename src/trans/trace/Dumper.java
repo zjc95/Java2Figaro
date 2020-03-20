@@ -34,7 +34,7 @@ public class Dumper {
     }
 
     public static void write() {
-        File file = new File(System.getProperty("user.dir") + "\\DumpResult.json");
+        File file = new File(System.getProperty("user.dir"), "DumpResult.json");
         BufferedWriter bufferedWriter = null;
         try {
             bufferedWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file, false), StandardCharsets.UTF_8));

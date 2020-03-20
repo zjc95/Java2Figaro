@@ -1,13 +1,9 @@
 package trans.common;
 
-import org.eclipse.core.runtime.IBundleGroup;
-import org.eclipse.core.runtime.IBundleGroupProvider;
-
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 
 public class IntroClassScript {
@@ -22,9 +18,7 @@ public class IntroClassScript {
         for (File resultFile : resultFiles) {
             if (!resultFile.getName().endsWith(".txt")) continue;
             try {
-
-                String outPath = resultPath + "\\AvailablePatch_" + resultFile.getName();
-                File outFile = new File(outPath);
+                File outFile = new File(resultPath, "AvailablePatch_" + resultFile.getName());
                 if (outFile.exists())
                     outFile.delete();
 
@@ -48,7 +42,7 @@ public class IntroClassScript {
                     }
                     else if (line.contains("Origin")) {
                         if (repairTest)
-                            Util.write("\n--------------\n", outPath, true);
+                            Util.write("\n--------------\n", outFile, true);
                         patch = "Origin";
                         repairTest = false;
                         originFailTest.clear();
@@ -68,7 +62,7 @@ public class IntroClassScript {
                         HashSet<String> patchSuccessTest = new HashSet<>(originFailTest);
                         patchSuccessTest.removeAll(patchFailTest);
                         if (patchSuccessTest.size() > 0) {
-                            Util.write(bugID + " " + patch, outPath, true);
+                            Util.write(bugID + " " + patch, outFile, true);
                             repairTest = true;
                         }
                     }
@@ -79,7 +73,7 @@ public class IntroClassScript {
                         HashSet<String> patchSuccessTest = new HashSet<>(originFailTest);
                         patchSuccessTest.removeAll(patchFailTest);
                         if (patchSuccessTest.size() > 0) {
-                            Util.write(bugID + " " + patch, outPath, true);
+                            Util.write(bugID + " " + patch, outFile, true);
                             repairTest = true;
                         }
                     }
@@ -94,9 +88,7 @@ public class IntroClassScript {
     }
 
     public static void crawl(String IntroClassPath, String MutationPath) {
-        String DataPath = IntroClassPath + "\\dataset";
-
-        File DataFile = new File(DataPath);
+        File DataFile = new File(IntroClassPath, "dataset");
         File[] projectFiles = DataFile.listFiles();
         if (projectFiles == null) return;
 
@@ -127,7 +119,7 @@ public class IntroClassScript {
                             if (!javaFile.exists())
                                 LevelLogger.error("Cannot Find Java Source : " + javaFilePath);
 
-                            Util.write(bugRelativePath + "\nOrigin\n" + runTest(bugFile.getAbsolutePath()) + "------\n", outPath, true);
+                            Util.write(bugRelativePath + "\nOrigin\n" + runTest(bugFile.getAbsolutePath()) + "------\n", outFile, true);
                             File[] mutationFiles = getMutationFile(MutationPath, subjectFile.getName(), bugFile.getName(), javaFileName);
                             if (mutationFiles == null)
                                 continue;
@@ -137,12 +129,12 @@ public class IntroClassScript {
                                     if (originJavaFile.exists())
                                         originJavaFile.delete();
                                     Files.copy(mutationJavaFile.toPath(), originJavaFile.toPath());
-                                    Util.write(mutationJavaFile.getAbsolutePath() + "\n" + runTest(bugFile.getAbsolutePath()) + "------\n", outPath, true);
+                                    Util.write(mutationJavaFile.getAbsolutePath() + "\n" + runTest(bugFile.getAbsolutePath()) + "------\n", outFile, true);
                                 } catch (IOException e) {
                                     e.printStackTrace();
                                 }
                             }
-                            Util.write("######\n", outPath, true);
+                            Util.write("######\n", outFile, true);
 
                             /*File mutationDirectoryFile = new File(MutationPath + "\\dataset" + bugRelativePath + "\\mutations");
                             if (!mutationDirectoryFile.exists()) continue;
@@ -159,7 +151,7 @@ public class IntroClassScript {
                                         if (originJavaFile.exists())
                                             originJavaFile.delete();
                                         Files.copy(mutationJavaFile.toPath(), originJavaFile.toPath());
-                                        write(mutationFile.getName() + "\n" + runTest(bugFile.getAbsolutePath()) + "------\n", outPath);
+                                        write(mutationFile.getName() + "\n" + runTest(bugFile.getAbsolutePath()) + "------\n", outFile);
                                     } catch (IOException e) {
                                         e.printStackTrace();
                                     }
@@ -243,8 +235,7 @@ public class IntroClassScript {
 
     private static Integer getNumber(String string) {
         try {
-            int num = Integer.parseInt(string);
-            return num;
+            return Integer.parseInt(string);
         }
         catch (NumberFormatException e) {
             return null;

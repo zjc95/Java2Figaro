@@ -3,7 +3,6 @@ import trans.common.LevelLogger;
 import org.eclipse.jdt.core.dom.*;
 
 class SourceParser {
-
     private static final int VARIABLE_TYPE_NONE = 0;
     private static final int VARIABLE_TYPE_DEF = 1;
     private static final int VARIABLE_TYPE_USE = 2;

@@ -2,6 +2,7 @@ package trans.common;
 
 import trans.patchsim.PatchSimParser;
 
+import java.io.File;
 import java.util.ArrayList;
 
 public class Demo {
@@ -12,21 +13,22 @@ public class Demo {
 
     private static void runPatchSimByFiles() {
         String workPath = "D:\\program\\workspace\\Java2FigaroData";
-        PatchSimParser.analyzeByFiles(workPath);
+        System.out.println(PatchSimParser.analyzeByFiles(new File(workPath)));
     }
 
     private static void runJsonFile() {
         String workPath = "D:\\program\\workspace\\Java2FigaroData";
-        Transverse.runJsonFile(workPath);
+        Transverse.runByJsonFile(new File(workPath));
     }
 
     private static void runFinalResultGenerate() {
-        String resultFilePath = "D:\\program\\workspace\\Java2FigaroData\\output.txt";
-        Transverse.genMultiTestResultByFiles(resultFilePath);
+        String resultFilePath = "D:\\program\\workspace\\Java2FigaroData\\Output.txt";
+        Transverse.genMultiTestResultByFiles(new File(resultFilePath));
     }
 
     private static void runProject1() {
         String originProjectPath = "D:\\program\\workspace\\Java2FigaroData2\\smallest_6aaeaf2f_001_1";
+        String copyProjectPath = "D:\\program\\workspace\\Java2FigaroData2\\copy";
         String srcFilePath = "\\src\\main\\java\\introclassJava\\smallest_6aaeaf2f_001.java";
         String testName = "smallest_6aaeaf2f_001WhiteboxTest#test1";
         String methodName = "exec";
@@ -37,12 +39,13 @@ public class Demo {
         exEntry.add("output");
         exRet.add("output");
 
-        Transverse.TestCaseResult testCaseResult = Transverse.runProjectTestCase(originProjectPath, srcFilePath, testName, methodName, exEntry, exRet);
+        Transverse.TestCaseResult testCaseResult = Transverse.runProjectTestCase(new File(originProjectPath), new File(copyProjectPath), srcFilePath, testName, methodName, exEntry, exRet);
         System.out.println(String.format("%.4f", testCaseResult.getProbability() * 100.0));
     }
 
     public static void runProject2() {
         String originProjectPath = "D:\\program\\workspace\\Java2FigaroData2\\smallest_6aaeaf2f_001_1";
+        String copyProjectPath = "D:\\program\\workspace\\Java2FigaroData2\\copy";
         String srcFilePath = "\\src\\main\\java\\introclassJava\\smallest_6aaeaf2f_001.java";
         String testName = "smallest_6aaeaf2f_001WhiteboxTest#test1";
         String methodName = "exec";
@@ -53,7 +56,7 @@ public class Demo {
         exEntry.add("output");
         exRet.add("output");
 
-        Transverse.TestCaseResult testCaseResult = Transverse.runProjectTestCase(originProjectPath, srcFilePath, testName, methodName, exEntry, exRet);
+        Transverse.TestCaseResult testCaseResult = Transverse.runProjectTestCase(new File(originProjectPath), new File(copyProjectPath), srcFilePath, testName, methodName, exEntry, exRet);
         System.out.println(String.format("%.4f", testCaseResult.getProbability() * 100.0));
     }
 

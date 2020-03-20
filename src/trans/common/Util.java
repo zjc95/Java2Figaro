@@ -14,15 +14,11 @@ public class Util {
     public static final int JAVA_LEVEL = AST.JLS8;
     public static final double ALPHA = 0.8;
     public static final String JAVA_VERSION = JavaCore.VERSION_1_8;
-    public static final String LIBRARY_PATH = System.getProperty("user.dir") + "\\lib";
-    public static final String FIGARO_JAR_PATH = LIBRARY_PATH + "\\figaro_2.12-5.0.0.0.jar";
-    public static final String JAVA2FIGARO_JAR_PATH = LIBRARY_PATH + "\\Java2Figaro.jar";
-    public static final String WORK_PATH = System.getProperty("user.dir") + "\\resources\\test";
-    public static final String COPY_PROJECT_PATH = WORK_PATH + "\\copy";
-    public static final String FIGARO_FILE_PATH = COPY_PROJECT_PATH + "\\patch.scala";
-    public static final String JSON_FILE_PATH = COPY_PROJECT_PATH + "\\DumpResult.json";
+    public static final File LIBRARY_DIRECTORY = new File(System.getProperty("user.dir"),"lib");
+    public static final File FIGARO_JAR_FILE = new File(LIBRARY_DIRECTORY, "figaro_2.12-5.0.0.0.jar");
+    public static final File JAVA2FIGARO_JAR_FILE = new File(LIBRARY_DIRECTORY, "Java2Figaro.jar");
 
-    public static CompilationUnit genASTFromSource(String srcFile, String srcPath) {
+    public static CompilationUnit genASTFromSource(File srcFile, String srcPath) {
         String source = readFileToString(srcFile);
         if(source.isEmpty()) return null;
 
@@ -37,7 +33,7 @@ public class Util {
         astParser.setResolveBindings(true);
         srcPath = srcPath == null ? "" : srcPath;
         astParser.setEnvironment(getClassPath(), new String[] {srcPath}, null, true);
-        astParser.setUnitName(srcFile);
+        astParser.setUnitName(srcFile.getName());
         astParser.setBindingsRecovery(true);
 
         try{
@@ -52,19 +48,13 @@ public class Util {
         return property.split(File.pathSeparator);
     }
 
-    public static String readFileToString(String srcFile) {
-        if (srcFile == null) {
-            LevelLogger.error("#readFileToString Illegal input file path : null.");
-            return "";
-        }
-
-        File file = new File(srcFile);
+    public static String readFileToString(File file) {
         if (!file.exists() || !file.isFile()) {
-            LevelLogger.error("#readFileToString Illegal input file path : " + srcFile);
+            LevelLogger.error("#readFileToString Illegal input file path : " + file.getAbsolutePath());
             return "";
         }
 
-        StringBuffer stringBuffer = new StringBuffer();
+        StringBuilder stringBuilder = new StringBuilder();
         InputStream in = null;
         InputStreamReader inputStreamReader = null;
         try {
@@ -73,7 +63,7 @@ public class Util {
             char[] ch = new char[1024];
             int readCount = 0;
             while ((readCount = inputStreamReader.read(ch)) != -1) {
-                stringBuffer.append(ch, 0, readCount);
+                stringBuilder.append(ch, 0, readCount);
             }
             inputStreamReader.close();
             in.close();
@@ -94,34 +84,10 @@ public class Util {
                 }
             }
         }
-        return stringBuffer.toString();
+        return stringBuilder.toString();
     }
 
-    public static void print(String str, String outFile) {
-        File file = new File(outFile);
-        try (PrintWriter output = new PrintWriter(file)) {
-            output.print(str);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static void deleteDir(String dirPath)
-    {
-        File file = new File(dirPath);
-        if(! file.isFile()) {
-            File[] files = file.listFiles();
-            if (files != null) {
-                for (File value : files) {
-                    deleteDir(value.getAbsolutePath());
-                }
-            }
-        }
-        file.delete();
-    }
-
-    public static void write(String string, String filePath, boolean isAppend) {
-        File file = new File(filePath);
+    public static void write(String string, File file, boolean isAppend) {
         BufferedWriter bufferedWriter = null;
         try {
             bufferedWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file, isAppend), StandardCharsets.UTF_8));
@@ -140,12 +106,22 @@ public class Util {
         }
     }
 
-    public static void copyFile(File sourceFile, String targetFilePath) {
+    public static void deleteDir(File file)
+    {
+        if (!file.isFile()) {
+            File[] files = file.listFiles();
+            if (files != null)
+                for (File value : files)
+                    deleteDir(value);
+        }
+        file.delete();
+    }
+
+    public static void copyFile(File sourceFile, File targetFile) {
         if (!sourceFile.isFile()) return;
         try {
-            File targetFile = new File(targetFilePath);
             if (targetFile.exists())
-                targetFile.delete();
+                deleteDir(targetFile);
             Files.copy(sourceFile.toPath(), targetFile.toPath());
         } catch (IOException e) {
             e.printStackTrace();
