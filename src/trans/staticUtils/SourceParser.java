@@ -380,7 +380,7 @@ class SourceParser {
         if (!context.checkControl()) return context;
         int line = _unit.getLineNumber(node.getStartPosition());
         int column = _unit.getColumnNumber(node.getStartPosition());
-        ControlExpression control = new ControlExpression(line, column, node);
+        ControlExpression control = new ControlExpression(line, column, node, context.getStmt());
         context.getStmt().addControlExpr(control);
         return context.newControlContext(control);
     }

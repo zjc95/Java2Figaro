@@ -17,7 +17,7 @@ public class Demo {
     }
 
     private static void runJsonFile() {
-        String workPath = "D:\\program\\workspace\\Java2FigaroData";
+        String workPath = "E:\\ProbabilisticProgramming\\Java2FigaroData";
         Transverse.runByJsonFile(new File(workPath));
     }
 
@@ -27,10 +27,10 @@ public class Demo {
     }
 
     private static void runProject1() {
-        String originProjectPath = "D:\\program\\workspace\\Java2FigaroData2\\smallest_6aaeaf2f_001_1";
-        String copyProjectPath = "D:\\program\\workspace\\Java2FigaroData2\\copy";
-        String srcFilePath = "\\src\\main\\java\\introclassJava\\smallest_6aaeaf2f_001.java";
-        String testName = "smallest_6aaeaf2f_001WhiteboxTest#test1";
+        String originProjectPath = "E:\\ProbabilisticProgramming\\Java2FigaroData\\tmp";
+        String copyProjectPath = "E:\\ProbabilisticProgramming\\Java2FigaroData\\copy";
+        String srcFilePath = "\\src\\main\\java\\introclassJava\\digits_d5059e2b_000.java";
+        String testName = "introclassJava.digits_d5059e2b_000BlackboxTest#test5";
         String methodName = "exec";
 
         ArrayList<String> exEntry = new ArrayList<>();

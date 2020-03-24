@@ -208,6 +208,13 @@ public class DynamicInfo {
     }
 
     void addCtrlExpr(DynamicCtrlExpr dynamicCtrlExpr) {
+        if (_controlList.size() > 0) {
+            DynamicCtrlExpr firstCtrlExpr = _controlList.get(0);
+            if (firstCtrlExpr.getKey().equals(dynamicCtrlExpr.getKey()))
+                _controlList.clear();
+            if (!firstCtrlExpr.getParentKey().equals(dynamicCtrlExpr.getParentKey()))
+                _controlList.clear();
+        }
         _controlList.add(dynamicCtrlExpr);
     }
 
@@ -289,16 +296,8 @@ public class DynamicInfo {
         return _source.toString();
     }
 
-    static String genDefinitionSource(String def, ArrayList<String> useList) {
+    private static String genDefinitionSourceStatement(String def, ArrayList<String> useList) {
         int size = useList.size();
-        if (size == 0) {
-            LevelLogger.warn("WARNING : Empty UseList : def " + def);
-            return "    val " + def + " = Flip( " + CONSTANT_PROBABILITY + ")\n";
-        }
-
-        if (size == 1)
-            return "    val " + def + " = If(" + useList.get(0) + ", Flip(" + HIGH_PROBABILITY + "), Flip(" + LOW_PROBABILITY +"))\n";
-
         StringBuilder source = new StringBuilder("    val " + def + " = RichCPD(");
         for (String use : useList)
             source.append(use).append(", ");
@@ -314,6 +313,33 @@ public class DynamicInfo {
             source.append(", *");
         source.append(") -> Flip(" + LOW_PROBABILITY +"))\n");
 
+        return source.toString();
+    }
+
+    static String genDefinitionSource(String def, ArrayList<String> useList) {
+        int size = useList.size();
+        if (size == 0) {
+            LevelLogger.warn("WARNING : Empty UseList : def " + def);
+            return "    val " + def + " = Flip( " + CONSTANT_PROBABILITY + ")\n";
+        }
+
+        if (size == 1)
+            return "    val " + def + " = If(" + useList.get(0) + ", Flip(" + HIGH_PROBABILITY + "), Flip(" + LOW_PROBABILITY +"))\n";
+
+        StringBuilder source = new StringBuilder();
+        for (int i = 1; size > 5; i++) {
+            ArrayList<String> tmpUseList = new ArrayList<>(useList.subList(0, 5));
+            String tmpDef = def + "_tmp" + i;
+            source.append(genDefinitionSourceStatement(tmpDef, tmpUseList));
+            useList.remove(0);
+            useList.remove(0);
+            useList.remove(0);
+            useList.remove(0);
+            useList.remove(0);
+            useList.add(0, tmpDef);
+            size -= 4;
+        }
+        source.append(genDefinitionSourceStatement(def, useList));
         return source.toString();
     }
 }

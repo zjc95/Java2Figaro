@@ -43,4 +43,9 @@ public class DynamicCtrlExpr extends DynamicMsg {
         source.append(DynamicInfo.genDefinitionSource(_figaroID, getUseList()));
         return source.toString();
     }
+
+    String getParentKey() {
+        ControlExpression controlExpression = (ControlExpression) _msg;
+        return controlExpression.getParentKey();
+    }
 }

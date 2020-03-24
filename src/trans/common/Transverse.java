@@ -38,7 +38,6 @@ public class Transverse {
 
     private static void runByProjectMutants(File workDirectory, JSONArray dataJsonList, File outputFile) {
         File copyProject = new File(workDirectory, "copy");
-        StringBuilder outputString = new StringBuilder();
         for (Object obj : dataJsonList) {
             JSONObject jsonData = (JSONObject) obj;
 
@@ -82,6 +81,7 @@ public class Transverse {
             LevelLogger.debug(testList.toString());
 
             LevelLogger.debug("Project : " + projectName);
+            StringBuilder outputString = new StringBuilder();
             outputString.append("Project : ").append(projectName).append("\n");
             ArrayList<Double> originResultList = new ArrayList<>();
             ArrayList<TraceList> originTraceLists = new ArrayList<>();
@@ -92,6 +92,8 @@ public class Transverse {
                 originResultList.add(testCaseResult.getProbability());
                 originTraceLists.add(testCaseResult.getTraceList());
             }
+
+            outputString.append("Origin Probability Array : ").append(originResultList.toString()).append("\n");
 
             for (File mutantFile : mutantFileList) {
                 if (!mutantFile.getName().endsWith(".java"))
@@ -111,13 +113,15 @@ public class Transverse {
                         .append(" : ")
                         .append(genMultiTestResult(originResultList, patchResultList)).append("\n");
 
+                outputString.append("Probability Array : ").append(patchResultList.toString()).append("\n");
+
                 boolean patchSimResult = PatchSimParser.analyze(originTraceLists, patchTraceLists);
                 outputString.append("Patch-Sim Result : ")
                         .append(patchSimResult ? "correct" : "incorrect")
                         .append("\n");
             }
+            Util.write(outputString.toString(), outputFile, true);
         }
-        Util.write(outputString.toString(), outputFile, false);
     }
 
     private static void runJsonFileByProjectList(File workDirectory, JSONArray data, File outputFile) {
