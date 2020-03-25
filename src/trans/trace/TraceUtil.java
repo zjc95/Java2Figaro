@@ -10,10 +10,11 @@ import java.util.List;
 public class TraceUtil {
     static final int TRACE_TYPE_NONE = 0;
     static final int TRACE_TYPE_ASSIGN = 1;
-    static final int TRACE_TYPE_STMT = 2;
-    static final int TRACE_TYPE_ENTRY = 3;
-    static final int TRACE_TYPE_RET = 4;
-    static final int TRACE_TYPE_CONTROL = 5;
+    static final int TRACE_TYPE_STMT_BEGIN = 2;
+    static final int TRACE_TYPE_STMT_END = 3;
+    static final int TRACE_TYPE_ENTRY = 4;
+    static final int TRACE_TYPE_RET = 5;
+    static final int TRACE_TYPE_CONTROL = 6;
 
     static AST _ast = null;
 
@@ -81,11 +82,22 @@ public class TraceUtil {
     }
 
     @SuppressWarnings("unchecked")
-    static Statement genControlStatement(int line, int column) {
+    static Statement genControlStatementBegin(int line, int column) {
         MethodInvocation methodInvocation = _ast.newMethodInvocation();
         methodInvocation.setExpression(_ast.newName("trans.trace.Dumper"));
         methodInvocation.setName(_ast.newSimpleName("dump"));
-        methodInvocation.arguments().add(_ast.newNumberLiteral(String.valueOf(TRACE_TYPE_STMT)));
+        methodInvocation.arguments().add(_ast.newNumberLiteral(String.valueOf(TRACE_TYPE_STMT_BEGIN)));
+        methodInvocation.arguments().add(_ast.newNumberLiteral(String.valueOf(line)));
+        methodInvocation.arguments().add(_ast.newNumberLiteral(String.valueOf(column)));
+        return _ast.newExpressionStatement(methodInvocation);
+    }
+
+    @SuppressWarnings("unchecked")
+    static Statement genControlStatementEnd(int line, int column) {
+        MethodInvocation methodInvocation = _ast.newMethodInvocation();
+        methodInvocation.setExpression(_ast.newName("trans.trace.Dumper"));
+        methodInvocation.setName(_ast.newSimpleName("dump"));
+        methodInvocation.arguments().add(_ast.newNumberLiteral(String.valueOf(TRACE_TYPE_STMT_END)));
         methodInvocation.arguments().add(_ast.newNumberLiteral(String.valueOf(line)));
         methodInvocation.arguments().add(_ast.newNumberLiteral(String.valueOf(column)));
         return _ast.newExpressionStatement(methodInvocation);
@@ -118,10 +130,23 @@ public class TraceUtil {
     }
 
     @SuppressWarnings("unchecked")
-    static Block genBlock(ASTNode stmt1, Statement stmt2) {
+    static Block genBlock(Statement stmtBegin, Statement stmtOld, Statement stmtEnd) {
         Block block = _ast.newBlock();
-        block.statements().add(stmt1);
-        block.statements().add(stmt2);
+        block.statements().add(stmtBegin);
+        if (stmtOld != null) {
+            if (stmtOld instanceof Block) {
+                Block blockOld = (Block) stmtOld;
+                for (Object object : blockOld.statements()) {
+                    ASTNode node = copyNode((ASTNode) object);
+                    block.statements().add(node);
+                    if (node instanceof ReturnStatement)
+                        return block;
+                }
+            } else block.statements().add(stmtOld);
+            if (stmtOld instanceof ReturnStatement)
+                return block;
+        }
+        block.statements().add(stmtEnd);
         return block;
     }
 
@@ -137,13 +162,16 @@ public class TraceUtil {
     }
 
     @SuppressWarnings("unchecked")
-    static Block genBlock(ASTNode stmt, Block oldBlock) {
+    static Block genBlock(ArrayList<ASTNode> stmtListBegin, Block oldBlock, ArrayList<ASTNode> stmtListEnd) {
         Block block = _ast.newBlock();
-        block.statements().add(stmt);
+        block.statements().addAll(stmtListBegin);
         for (Object object : oldBlock.statements()) {
             ASTNode node = copyNode((ASTNode) object);
             block.statements().add(node);
+            if (node instanceof ReturnStatement)
+                return block;
         }
+        block.statements().addAll(stmtListEnd);
         return block;
     }
 

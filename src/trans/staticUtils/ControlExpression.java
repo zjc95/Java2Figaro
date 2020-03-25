@@ -24,4 +24,6 @@ public class ControlExpression extends StaticMsg {
     public String getParentKey() {
         return _parentStmt.getKey();
     }
+
+    public Stmt getParentStmt() { return _parentStmt; }
 }

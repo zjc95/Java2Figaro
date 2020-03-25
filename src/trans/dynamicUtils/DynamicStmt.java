@@ -18,7 +18,8 @@ public class DynamicStmt extends DynamicMsg {
         super(info, line, column, stmt);
     }
 
-    private DynamicStmt getStructure(Stmt stmt) {
+    private DynamicStmt getStructure() {
+        Stmt stmt = (Stmt) _msg;
         Stmt structure = stmt.getStructure();
         if (structure != null) {
             DynamicStmt dycStructure = _info.getStructure(structure);
@@ -40,7 +41,7 @@ public class DynamicStmt extends DynamicMsg {
         if (stmt.isControlStmt())
             _ctrlList = _info.getCtrlList();
 
-        _structure = getStructure(stmt);
+        _structure = getStructure();
         _info.setStructure(stmt, this);
     }
 

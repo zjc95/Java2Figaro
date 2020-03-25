@@ -75,7 +75,8 @@ public class Dumper {
     private static String getTypeString(int type) {
         switch (type) {
             case TraceUtil.TRACE_TYPE_ASSIGN: return "ASSIGN";
-            case TraceUtil.TRACE_TYPE_STMT: return "STMT";
+            case TraceUtil.TRACE_TYPE_STMT_BEGIN: return "STMT";
+            case TraceUtil.TRACE_TYPE_STMT_END: return "END";
             case TraceUtil.TRACE_TYPE_ENTRY: return "ENTRY";
             case TraceUtil.TRACE_TYPE_RET: return "RET";
             case TraceUtil.TRACE_TYPE_CONTROL: return "CONTROL";

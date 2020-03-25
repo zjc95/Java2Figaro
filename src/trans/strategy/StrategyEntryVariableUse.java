@@ -50,6 +50,16 @@ public class StrategyEntryVariableUse extends Strategy {
                 continue;
             }
 
+            if (msg instanceof DynamicStmtEnd) {
+                ArrayList<Pair<String, String>> scopeDefList = ((DynamicStmtEnd) msg).getScopeDefList();
+                for (Pair<String, String> scopeDef : scopeDefList) {
+                    HashSet<String> useVarEntryList = entryMap.get(scopeDef.getValue());
+                    useVarEntryList.addAll(entryMap.get(figaroID));
+                    entryMap.put(scopeDef.getKey(), useVarEntryList);
+                }
+                continue;
+            }
+
             ArrayList<String> useList = getUseList(msg);
             if ((useList.size() == 1) && (useList.get(0).equals("Var_scanner"))) {
                 entryList.add(figaroID);

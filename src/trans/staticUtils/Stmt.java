@@ -4,11 +4,13 @@ import org.eclipse.jdt.core.dom.ASTNode;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 public class Stmt extends StaticMsg {
     private Stmt _structure;
     private ArrayList<Assign> _assignList = new ArrayList<>();
+    private ArrayList<Assign> _scopeDefineList = new ArrayList<>();
     private ArrayList<ControlExpression> _controlExprList = new ArrayList<>();
     private Map<String, VarNode> _useList = new HashMap<>();
 
@@ -19,10 +21,23 @@ public class Stmt extends StaticMsg {
 
     void addAssign(Assign assign) {
         _assignList.add(assign);
+        if (_structure != null)
+            _structure.addScopeDefine(assign);
     }
 
     ArrayList<Assign> getAssignList() {
         return _assignList;
+    }
+
+    void addScopeDefine(Assign assign) {
+        _scopeDefineList.add(assign);
+    }
+
+    public HashSet<String> getScopeDefine() {
+        HashSet<String> scopeDefineSet = new HashSet<>();
+        for (Assign assign : _scopeDefineList)
+            scopeDefineSet.add(assign.getDef().getID());
+        return scopeDefineSet;
     }
 
     void addControlExpr(ControlExpression expr) {

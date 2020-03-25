@@ -29,8 +29,8 @@ public class Demo {
     private static void runProject1() {
         String originProjectPath = "D:\\program\\workspace\\Java2FigaroData\\tmp";
         String copyProjectPath = "D:\\program\\workspace\\Java2FigaroData\\copy";
-        String srcFilePath = "\\src\\main\\java\\introclassJava\\digits_d5059e2b_000.java";
-        String testName = "introclassJava.digits_d5059e2b_000BlackboxTest#test5";
+        String srcFilePath = "\\src\\main\\java\\introclassJava\\smallest_1b31fa5c_003.java";
+        String testName = "introclassJava.smallest_1b31fa5c_003BlackboxTest#test5";
         String methodName = "exec";
 
         ArrayList<String> exEntry = new ArrayList<>();

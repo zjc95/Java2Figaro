@@ -69,7 +69,6 @@ public class DynamicInfo {
         for (DynamicMsg msg : _msgList)
             msg.parse();
 
-
         Strategy stgGather = new Strategy();
         stgGather.init();
         _varObservationList = stgGather.parse(_msgList);
@@ -120,6 +119,12 @@ public class DynamicInfo {
                 if (stmt == null)
                     LevelLogger.error("JSON INFORMATION STMT NOT FOUND : line " + line + ", column " + column);
                 _msgList.add(new DynamicStmt(this, line, column, stmt));
+                break;
+            case "END":
+                Stmt stmtEnd = _staticInfo.getStmt(line, column);
+                if (stmtEnd == null)
+                    LevelLogger.error("JSON INFORMATION STMT NOT FOUND : line " + line + ", column " + column);
+                _msgList.add(new DynamicStmtEnd(this, line, column, stmtEnd));
                 break;
             default:
                 LevelLogger.error("JSON INFORMATION TYPE ERROR : line " + line + ", column " + column);
@@ -233,6 +238,18 @@ public class DynamicInfo {
             return "Stmt_" + key + "_" + ctrlTime;
         }
         _stmtDefTimeMap.put(key, 0);
+        return "Stmt_" + key;
+    }
+
+    String getStmtFigaroID(DynamicStmtEnd dynamicStmtEnd) {
+        String key = dynamicStmtEnd.getKey();
+        if (!_stmtDefTimeMap.containsKey(key)) {
+            int ctrlTime = _stmtDefTimeMap.get(key);
+            if (ctrlTime == 0)
+                return "Stmt_" + key;
+            return "Stmt_" + key + "_" + ctrlTime;
+        }
+        LevelLogger.error("ERROR : STMT END WITHOUT BEGIN " + key);
         return "Stmt_" + key;
     }
 

@@ -7,7 +7,8 @@ import java.util.ArrayList;
 
 public class InstrumentationParser {
     private CompilationUnit _unit;
-    private Statement _tryCtrlStmt;
+    private Statement _tryCtrlStmtBegin;
+    private Statement _tryCtrlStmtEnd;
     private Type _retType = null;
     private Type _declType = null;
 
@@ -182,9 +183,10 @@ public class InstrumentationParser {
 
         int line = _unit.getLineNumber(node.getStartPosition());
         int column = _unit.getColumnNumber(node.getStartPosition());
-        Statement statement = TraceUtil.genControlStatement(line, column);
+        Statement controlStatementBegin = TraceUtil.genControlStatementBegin(line, column);
+        Statement controlStatementEnd = TraceUtil.genControlStatementEnd(line, column);
         Block block = (Block) process(node.getBody(), TraceUtil.TRACE_TYPE_NONE);
-        myNode.setBody(TraceUtil.genBlock(statement, block));
+        myNode.setBody(TraceUtil.genBlock(controlStatementBegin, block, controlStatementEnd));
 
         return myNode;
     }
@@ -227,24 +229,18 @@ public class InstrumentationParser {
 
         int line = _unit.getLineNumber(node.getStartPosition());
         int column = _unit.getColumnNumber(node.getStartPosition());
-        Statement thenStatementControl = TraceUtil.genControlStatement(line, column);
+        Statement thenStatementControlBegin = TraceUtil.genControlStatementBegin(line, column);
+        Statement thenStatementControlEnd = TraceUtil.genControlStatementEnd(line, column);
         Statement thenStatement = (Statement) process(node.getThenStatement(), traceType);
-        if (thenStatement instanceof Block) {
-            Block thenBlock = (Block) thenStatement;
-            myNode.setThenStatement(TraceUtil.genBlock(thenStatementControl, thenBlock));
-        }
-        else myNode.setThenStatement(TraceUtil.genBlock(thenStatementControl, thenStatement));
+        myNode.setThenStatement(TraceUtil.genBlock(thenStatementControlBegin, thenStatement, thenStatementControlEnd));
 
+        Statement elseStatementControlBegin = TraceUtil.genControlStatementBegin(line, column);
+        Statement elseStatementControlEnd = TraceUtil.genControlStatementEnd(line, column);
         if (node.getElseStatement() != null) {
-            Statement elseStatementControl = TraceUtil.genControlStatement(line, column);
             Statement elseStatement = (Statement) process(node.getElseStatement(), traceType);
-            if (elseStatement instanceof Block) {
-                Block elseBlock = (Block) elseStatement;
-                myNode.setElseStatement(TraceUtil.genBlock(elseStatementControl, elseBlock));
-            }
-            else
-                myNode.setElseStatement(TraceUtil.genBlock(elseStatementControl, elseStatement));
+            myNode.setElseStatement(TraceUtil.genBlock(elseStatementControlBegin, elseStatement, elseStatementControlEnd));
         }
+        else TraceUtil.genBlock(elseStatementControlBegin, null, elseStatementControlEnd);
 
         return myNode;
     }
@@ -281,14 +277,10 @@ public class InstrumentationParser {
         ArrayList<ASTNode> statements = new ArrayList<>();
         for (Object object : node.statements())
             if (!(object instanceof SwitchCase)) {
-                Statement statementControl = TraceUtil.genControlStatement(line, column);
+                Statement controlStatementBegin = TraceUtil.genControlStatementBegin(line, column);
+                Statement controlStatementEnd = TraceUtil.genControlStatementEnd(line, column);
                 Statement statement = (Statement) process((ASTNode) object, TraceUtil.TRACE_TYPE_NONE);
-                if (statement instanceof Block) {
-                    Block block = (Block) statement;
-                    statements.add(TraceUtil.genBlock(statementControl, block));
-                }
-                else
-                    statements.add(TraceUtil.genBlock(statementControl, statement));
+                statements.add(TraceUtil.genBlock(controlStatementBegin, statement, controlStatementEnd));
             }
         myNode.statements().clear();
         myNode.statements().addAll(statements);
@@ -313,13 +305,10 @@ public class InstrumentationParser {
         Type type = TraceUtil.typeFromBinding(node.getExpression().resolveTypeBinding());
         myNode.setExpression(TraceUtil.genAssignExpression(expression, (Type) TraceUtil.copyNode(type), line, column));
 
-        Statement statementControl = TraceUtil.genControlStatement(line, column);
+        Statement controlStatementBegin = TraceUtil.genControlStatementBegin(line, column);
+        Statement controlStatementEnd = TraceUtil.genControlStatementEnd(line, column);
         Statement statement = (Statement) process(node.getBody(), TraceUtil.TRACE_TYPE_NONE);
-        if (statement instanceof Block) {
-            Block block = (Block) statement;
-            myNode.setBody(TraceUtil.genBlock(statementControl, block));
-        }
-        else myNode.setBody(TraceUtil.genBlock(statementControl, statement));
+        myNode.setBody(TraceUtil.genBlock(controlStatementBegin, statement, controlStatementEnd));
 
         return myNode;
     }
@@ -360,13 +349,14 @@ public class InstrumentationParser {
 
         int line = _unit.getLineNumber(node.getStartPosition());
         int column = _unit.getColumnNumber(node.getStartPosition());
-        Statement statementControl = TraceUtil.genControlStatement(line, column);
+        Statement controlStatementBegin = TraceUtil.genControlStatementBegin(line, column);
+        Statement controlStatementEnd = TraceUtil.genControlStatementEnd(line, column);
         Statement statement = (Statement) process(node.getBody(), TraceUtil.TRACE_TYPE_NONE);
         if (statement instanceof Block) {
             Block block = (Block) statement;
-            myNode.setBody(TraceUtil.genBlock(statementControl, block));
+            myNode.setBody(TraceUtil.genBlock(controlStatementBegin, block, controlStatementEnd));
         }
-        else myNode.setBody(TraceUtil.genBlock(statementControl, statement));
+        else myNode.setBody(TraceUtil.genBlock(controlStatementBegin, statement, controlStatementEnd));
 
         return myNode;
     }
@@ -382,13 +372,10 @@ public class InstrumentationParser {
 
         int line = _unit.getLineNumber(node.getStartPosition());
         int column = _unit.getColumnNumber(node.getStartPosition());
-        Statement statementControl = TraceUtil.genControlStatement(line, column);
+        Statement controlStatementBegin = TraceUtil.genControlStatementBegin(line, column);
+        Statement controlStatementEnd = TraceUtil.genControlStatementEnd(line, column);
         Statement statement = (Statement) process(node.getBody(), TraceUtil.TRACE_TYPE_NONE);
-        if (statement instanceof Block) {
-            Block block = (Block) statement;
-            myNode.setBody(TraceUtil.genBlock(statementControl, block));
-        }
-        else myNode.setBody(TraceUtil.genBlock(statementControl, statement));
+        myNode.setBody(TraceUtil.genBlock(controlStatementBegin, statement, controlStatementEnd));
 
         return myNode;
     }
@@ -404,13 +391,10 @@ public class InstrumentationParser {
 
         int line = _unit.getLineNumber(node.getStartPosition());
         int column = _unit.getColumnNumber(node.getStartPosition());
-        Statement statementControl = TraceUtil.genControlStatement(line, column);
+        Statement controlStatementBegin = TraceUtil.genControlStatementBegin(line, column);
+        Statement controlStatementEnd = TraceUtil.genControlStatementEnd(line, column);
         Statement statement = (Statement) process(node.getBody(), TraceUtil.TRACE_TYPE_NONE);
-        if (statement instanceof Block) {
-            Block block = (Block) statement;
-            myNode.setBody(TraceUtil.genBlock(statementControl, block));
-        }
-        else myNode.setBody(TraceUtil.genBlock(statementControl, statement));
+        myNode.setBody(TraceUtil.genBlock(controlStatementBegin, statement, controlStatementEnd));
 
         return myNode;
     }
@@ -437,9 +421,10 @@ public class InstrumentationParser {
 
         int line = _unit.getLineNumber(node.getStartPosition());
         int column = _unit.getColumnNumber(node.getStartPosition());
-        _tryCtrlStmt = TraceUtil.genControlStatement(line, column);
+        _tryCtrlStmtBegin = TraceUtil.genControlStatementBegin(line, column);
+        _tryCtrlStmtEnd = TraceUtil.genControlStatementBegin(line, column);
         Block block = (Block) process(node.getBody(), TraceUtil.TRACE_TYPE_NONE);
-        myNode.setBody(TraceUtil.genBlock(_tryCtrlStmt, block));
+        myNode.setBody(TraceUtil.genBlock(_tryCtrlStmtBegin, block, _tryCtrlStmtEnd));
 
         ArrayList<ASTNode> catchClauses = new ArrayList<>();
         for (Object object : node.catchClauses()) {
@@ -450,8 +435,10 @@ public class InstrumentationParser {
         myNode.catchClauses().addAll(catchClauses);
 
         if (node.getFinally() != null) {
+            Statement controlStatementBegin = TraceUtil.genControlStatementBegin(line, column);
+            Statement controlStatementEnd = TraceUtil.genControlStatementEnd(line, column);
             Block finallyBlock = (Block) process(node.getFinally(), TraceUtil.TRACE_TYPE_NONE);
-            myNode.setFinally(TraceUtil.genBlock(_tryCtrlStmt, finallyBlock));
+            myNode.setFinally(TraceUtil.genBlock(controlStatementBegin, finallyBlock, controlStatementEnd));
         }
 
         return myNode;
@@ -468,14 +455,18 @@ public class InstrumentationParser {
 
         int line = _unit.getLineNumber(node.getStartPosition());
         int column = _unit.getColumnNumber(node.getStartPosition());
-        Statement statement = TraceUtil.genControlStatement(line, column);
+        Statement controlStatementBegin = TraceUtil.genControlStatementBegin(line, column);
+        Statement controlStatementEnd = TraceUtil.genControlStatementEnd(line, column);
         Block block = (Block) process(node.getBody(), TraceUtil.TRACE_TYPE_NONE);
 
-        ArrayList<ASTNode> statements = new ArrayList<>();
-        statements.add(TraceUtil.copyNode(_tryCtrlStmt));
-        statements.add(statement);
-        statements.add(entryStatement);
-        myNode.setBody(TraceUtil.genBlock(statements, block));
+        ArrayList<ASTNode> statementsBegin = new ArrayList<>();
+        ArrayList<ASTNode> statementsEnd = new ArrayList<>();
+        statementsBegin.add(TraceUtil.copyNode(_tryCtrlStmtBegin));
+        statementsBegin.add(controlStatementBegin);
+        statementsBegin.add(entryStatement);
+        statementsEnd.add(controlStatementEnd);
+        statementsEnd.add(_tryCtrlStmtEnd);
+        myNode.setBody(TraceUtil.genBlock(statementsBegin, block, statementsEnd));
 
         return myNode;
     }
