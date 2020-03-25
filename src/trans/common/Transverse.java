@@ -38,6 +38,7 @@ public class Transverse {
 
     private static void runByProjectMutants(File workDirectory, JSONArray dataJsonList, File outputFile) {
         File copyProject = new File(workDirectory, "copy");
+        File patchSimOutput = new File(workDirectory, "PatchSim.txt");
         for (Object obj : dataJsonList) {
             JSONObject jsonData = (JSONObject) obj;
 
@@ -82,7 +83,8 @@ public class Transverse {
 
             LevelLogger.debug("Project : " + projectName);
             StringBuilder outputString = new StringBuilder();
-            outputString.append("Project : ").append(projectName).append("\n");
+            outputString.append(projectName);
+            ArrayList<String> testFailList = new ArrayList<>();
             ArrayList<Double> originResultList = new ArrayList<>();
             ArrayList<TraceList> originTraceLists = new ArrayList<>();
             //--------Get Origin Project Result-----
@@ -91,9 +93,12 @@ public class Transverse {
                 LevelLogger.debug("Origin " + test + " : " + String.format("%.6f", testCaseResult._probability * 100.0) + "%");
                 originResultList.add(testCaseResult.getProbability());
                 originTraceLists.add(testCaseResult.getTraceList());
+                if (!testCaseResult.checkPass()) {
+                    outputString.append(" ").append(testCaseResult.getProbability());
+                    testFailList.add(test);
+                }
             }
-
-            outputString.append("Origin Probability Array : ").append(originResultList.toString()).append("\n");
+            outputString.append("\n");
 
             for (File mutantFile : mutantFileList) {
                 if (!mutantFile.getName().endsWith(".java"))
@@ -102,23 +107,18 @@ public class Transverse {
                 ArrayList<Double> patchResultList = new ArrayList<>();
                 ArrayList<TraceList> patchTraceLists = new ArrayList<>();
                 LevelLogger.debug("MutantFile : " + mutantFile.getName());
+                outputString.append(mutantFile.getName());
                 for (String test : testList) {
                     TestCaseResult testCaseResult = runMutantTestCase(sourceDirectory, copyProject, srcFilePath, mutantFile, test, methodName, exEntryList, exRetList);
                     LevelLogger.debug(mutantFile.getName() + " " + test + " : " + String.format("%.6f", testCaseResult._probability * 100.0) + "%");
                     patchResultList.add(testCaseResult.getProbability());
                     patchTraceLists.add(testCaseResult.getTraceList());
+                    if (testFailList.contains(test))
+                        outputString.append(" ").append(testCaseResult.getProbability());
                 }
-                outputString.append("Patch ")
-                        .append(mutantFile.getName())
-                        .append(" : ")
-                        .append(genMultiTestResult(originResultList, patchResultList)).append("\n");
-
-                outputString.append("Probability Array : ").append(patchResultList.toString()).append("\n");
-
-                boolean patchSimResult = PatchSimParser.analyze(originTraceLists, patchTraceLists);
-                outputString.append("Patch-Sim Result : ")
-                        .append(patchSimResult ? "correct" : "incorrect")
-                        .append("\n");
+                outputString.append(" ").append(genMultiTestResult(originResultList, patchResultList)).append("\n");
+                String patchSimResult = PatchSimParser.analyze(originTraceLists, patchTraceLists) ? "Y" : "N";
+                Util.write(mutantFile.getName() + " " + patchSimResult, patchSimOutput, true);
             }
             Util.write(outputString.toString(), outputFile, true);
         }
@@ -302,6 +302,11 @@ public class Transverse {
             _isPass = isPass;
         }
 
+        boolean checkPass()
+        {
+            return _isPass;
+        }
+
         TraceList getTraceList() {
             if (_dynamicInfo != null)
                 return _dynamicInfo.genTraceList(_isPass);
@@ -309,8 +314,7 @@ public class Transverse {
         }
 
         double getProbability() {
-            if (_isPass) return _probability;
-            return 0.0;
+            return _probability;
         }
     }
 

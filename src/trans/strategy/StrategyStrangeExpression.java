@@ -3,12 +3,11 @@ package trans.strategy;
 import javafx.util.Pair;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.InfixExpression;
-import trans.dynamicUtils.DynamicAssign;
+import trans.common.Util;
 import trans.dynamicUtils.DynamicCtrlExpr;
 import trans.dynamicUtils.DynamicMsg;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 
 public class StrategyStrangeExpression extends Strategy {
 
@@ -19,7 +18,7 @@ public class StrategyStrangeExpression extends Strategy {
             ASTNode leftOperand = infixExpression.getLeftOperand();
             ASTNode rightOperand = infixExpression.getRightOperand();
             if (leftOperand.toString().equals(rightOperand.toString()))
-                return new Pair<>(dynamicCtrlExpr.getFigaroID(), 0.4);
+                return new Pair<>(dynamicCtrlExpr.getFigaroID(), Util.STRATEGY_LOW_PROBABILITY);
         }
         return null;
     }

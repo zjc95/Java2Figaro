@@ -11,8 +11,15 @@ import java.nio.file.Files;
 import java.util.Map;
 
 public class Util {
-    public static final int JAVA_LEVEL = AST.JLS8;
     public static final double ALPHA = 0.8;
+    public static final double SEMANTIC_HIGH_PROBABILITY = 0.99;
+    public static final double SEMANTIC_LOW_PROBABILITY = 0.05;
+    public static final double SEMANTIC_CONSTANT_PROBABILITY = 0.8;
+    public static final double STRATEGY_LOW_PROBABILITY = 0.3;
+    public static final double STRATEGY_HIGH_PROBABILITY = 0.7;
+
+
+    public static final int JAVA_LEVEL = AST.JLS8;
     public static final String JAVA_VERSION = JavaCore.VERSION_1_8;
     public static final File LIBRARY_DIRECTORY = new File(System.getProperty("user.dir"),"lib");
     public static final File FIGARO_JAR_FILE = new File(LIBRARY_DIRECTORY, "figaro_2.12-5.0.0.0.jar");

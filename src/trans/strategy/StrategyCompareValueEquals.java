@@ -2,6 +2,7 @@ package trans.strategy;
 
 import javafx.util.Pair;
 import org.eclipse.jdt.core.dom.*;
+import trans.common.Util;
 import trans.dynamicUtils.DynamicAssign;
 import trans.dynamicUtils.DynamicCtrlExpr;
 import trans.dynamicUtils.DynamicMsg;
@@ -35,7 +36,7 @@ public class StrategyCompareValueEquals extends Strategy {
         String rightValue = getNodeValue(infixExpression.getRightOperand());
 
         if ((leftValue != null) && (leftValue.equals(rightValue)))
-            return new Pair<>(msg.getFigaroID(), 0.4);
+            return new Pair<>(msg.getFigaroID(), Util.STRATEGY_LOW_PROBABILITY);
         return null;
     }
 

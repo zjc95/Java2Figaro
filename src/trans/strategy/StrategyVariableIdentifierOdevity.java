@@ -1,6 +1,7 @@
 package trans.strategy;
 
 import javafx.util.Pair;
+import trans.common.Util;
 import trans.dynamicUtils.DynamicAssign;
 import trans.dynamicUtils.DynamicMsg;
 
@@ -13,12 +14,12 @@ public class StrategyVariableIdentifierOdevity extends Strategy{
             int val = Integer.parseInt(string);
 
             if (def.endsWith("odd") || def.endsWith("Odd"))
-                if (val % 2 == 0) return new Pair<>(figaroID, 0.2);
-                else return new Pair<>(figaroID, 0.8);
+                if (val % 2 == 0) return new Pair<>(figaroID, Util.STRATEGY_LOW_PROBABILITY);
+                else return new Pair<>(figaroID, Util.STRATEGY_HIGH_PROBABILITY);
 
             if (def.endsWith("even") || def.endsWith("Even"))
-                if (val % 2 == 0) return new Pair<>(figaroID, 0.8);
-                else return new Pair<>(figaroID, 0.2);
+                if (val % 2 == 0) return new Pair<>(figaroID, Util.STRATEGY_HIGH_PROBABILITY);
+                else return new Pair<>(figaroID, Util.STRATEGY_LOW_PROBABILITY);
 
             return null;
         } catch (NumberFormatException ignored) {

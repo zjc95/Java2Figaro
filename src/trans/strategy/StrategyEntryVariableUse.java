@@ -1,6 +1,7 @@
 package trans.strategy;
 
 import javafx.util.Pair;
+import trans.common.Util;
 import trans.dynamicUtils.*;
 
 import java.util.ArrayList;
@@ -66,7 +67,7 @@ public class StrategyEntryVariableUse extends Strategy {
 
         HashSet<String> retEntryUseSet = entryMap.get("Ret");
         if (retEntryUseSet.size() < entryList.size())
-            observationList.add(new Pair<>("Ret", 0.3));
+            observationList.add(new Pair<>("Ret", Util.STRATEGY_LOW_PROBABILITY));
 
         return observationList;
     }

@@ -1,5 +1,6 @@
 package trans.dynamicUtils;
 
+import trans.common.Util;
 import trans.patchsim.TraceList;
 import trans.staticUtils.*;
 import trans.common.LevelLogger;
@@ -248,10 +249,6 @@ public class DynamicInfo {
 
     /***************Figaro Source Generate*********************/
 
-    private static final double HIGH_PROBABILITY = 0.99;
-    private static final double LOW_PROBABILITY = 0.05;
-    private static final double CONSTANT_PROBABILITY = 0.7;
-
     public String genFigaroSource() {
         StringBuilder _source = new StringBuilder("");
 
@@ -306,12 +303,12 @@ public class DynamicInfo {
         source.append("      (" + "OneOf(true)");
         for (int i = 1; i < size; i++)
             source.append(", OneOf(true)");
-        source.append(") -> Flip(" + HIGH_PROBABILITY + "),\n");
+        source.append(") -> Flip(" + Util.SEMANTIC_HIGH_PROBABILITY + "),\n");
 
         source.append("      (" + "*");
         for (int i = 1; i < size; i++)
             source.append(", *");
-        source.append(") -> Flip(" + LOW_PROBABILITY +"))\n");
+        source.append(") -> Flip(" + Util.SEMANTIC_LOW_PROBABILITY +"))\n");
 
         return source.toString();
     }
@@ -320,11 +317,11 @@ public class DynamicInfo {
         int size = useList.size();
         if (size == 0) {
             LevelLogger.warn("WARNING : Empty UseList : def " + def);
-            return "    val " + def + " = Flip( " + CONSTANT_PROBABILITY + ")\n";
+            return "    val " + def + " = Flip(" + Util.SEMANTIC_CONSTANT_PROBABILITY + ")\n";
         }
 
         if (size == 1)
-            return "    val " + def + " = If(" + useList.get(0) + ", Flip(" + HIGH_PROBABILITY + "), Flip(" + LOW_PROBABILITY +"))\n";
+            return "    val " + def + " = If(" + useList.get(0) + ", Flip(" + Util.SEMANTIC_HIGH_PROBABILITY + "), Flip(" + Util.SEMANTIC_LOW_PROBABILITY +"))\n";
 
         StringBuilder source = new StringBuilder();
         for (int i = 1; size > 5; i++) {
