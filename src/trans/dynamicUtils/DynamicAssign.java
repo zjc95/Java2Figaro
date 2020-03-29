@@ -56,6 +56,8 @@ public class DynamicAssign extends DynamicMsg {
         _figaroID = _info.genVarFigaroID(assign.getDef(), true);
         _info.addFieldRelation(assign.getDef());
         _structure = getStructure(assign.getStmt());
+        if (_structure != null)
+            _info.addStructureDefine(_structure, assign.getDef());
     }
 
     public ArrayList<String> getUseList() {

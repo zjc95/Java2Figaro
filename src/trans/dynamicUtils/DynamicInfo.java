@@ -13,6 +13,7 @@ import trans.strategy.Strategy;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 public class DynamicInfo {
@@ -40,11 +41,13 @@ public class DynamicInfo {
     /***************Dynamic Inform Parse*********************/
     private ArrayList<DynamicMsg> _msgList = new ArrayList<>();
     private Map<String, DynamicStmt> _structureMap = new HashMap<>();
+    private Map<String, HashSet<String>> _structureDefMap = new HashMap<>();
     private Map<String, ArrayList<Pair<VarNode, String>>> _varFieldMap = new HashMap<>();
     private Map<String, Integer> _varDefTimeMap = new HashMap<>();
     private Map<String, Integer> _stmtDefTimeMap = new HashMap<>();
     private Map<String, Integer> _controlDefTimeMap = new HashMap<>();
     private ArrayList<DynamicCtrlExpr> _controlList = new ArrayList<>();
+    private ArrayList<String> _undefinedVarList = new ArrayList<>();
     private ArrayList<Pair<String, Double>> _varObservationList = new ArrayList<>();
 
     void parse() {
@@ -146,7 +149,7 @@ public class DynamicInfo {
         else {
             if (!isDef) {
                 LevelLogger.warn("WARNING : Use Without Define : " + varID);
-                return null;
+                _undefinedVarList.add("Var_" + varName);
             }
             _varDefTimeMap.put(varName, 0);
         }
@@ -211,6 +214,23 @@ public class DynamicInfo {
 
     void setStructure(Stmt stmt, DynamicStmt dynamicStmt) {
         _structureMap.put(stmt.getKey(), dynamicStmt);
+        _structureDefMap.put(dynamicStmt.getFigaroID(), new HashSet<>());
+    }
+
+    void addStructureDefine(DynamicStmt structure, VarNode var) {
+        HashSet<String> structureDefSet = getStructureDefine(structure);
+        structureDefSet.add(var.getID());
+    }
+
+    void addStructureDefine(DynamicStmt structure, HashSet<String> defSet) {
+        HashSet<String> structureDefSet = getStructureDefine(structure);
+        structureDefSet.addAll(defSet);
+    }
+
+    HashSet<String> getStructureDefine(DynamicStmt structure) {
+        if (structure == null)
+            return new HashSet<>();
+        return _structureDefMap.get(structure.getFigaroID());
     }
 
     void addCtrlExpr(DynamicCtrlExpr dynamicCtrlExpr) {
@@ -277,6 +297,9 @@ public class DynamicInfo {
         _source.append("  def main(args: Array[String]): Unit = {\n");
 
         _source.append("    //-------------Semantic--------------\n");
+        for (String varFigaroID : _undefinedVarList)
+            _source.append("    val ").append(varFigaroID).append(" = Flip(").append(Util.STRATEGY_LOW_PROBABILITY).append(")\n");
+
         for (DynamicMsg msg : _msgList)
             _source.append(msg.genSource());
         _source.append("\n");

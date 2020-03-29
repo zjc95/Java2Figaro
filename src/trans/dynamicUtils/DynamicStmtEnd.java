@@ -7,13 +7,12 @@ import trans.staticUtils.Stmt;
 import trans.staticUtils.VarNode;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 
 public class DynamicStmtEnd extends DynamicMsg {
     private DynamicStmt _structure = null;
-    private ArrayList<Pair<String, String>> _scopeDefList = new ArrayList<>();
+    private DynamicStmt _scope = null;
+    private ArrayList<Pair<String, String>> _scopeUnusedList = new ArrayList<>();
 
     DynamicStmtEnd(DynamicInfo info, int line, int column, Stmt stmt) {
         super(info, line, column, stmt);
@@ -32,29 +31,34 @@ public class DynamicStmtEnd extends DynamicMsg {
     }
 
     void parse() {
-        _figaroID = _info.getStmtFigaroID(this);
-        _structure = getStructure();
+        //_figaroID = _info.getStmtFigaroID(this);
         Stmt stmt = (Stmt) _msg;
+        _scope = _info.getStructure(stmt);
+        _figaroID = _scope.getFigaroID();
+        _structure = getStructure();
         if (stmt.getNode() instanceof IfStatement) {
-            HashSet<String> scopeUseSet = stmt.getScopeDefine();
+            HashSet<String> scopeUnusedSet = stmt.getScopeDefine();
+            HashSet<String> scopeDefSet = _info.getStructureDefine(_scope);
+            scopeUnusedSet.removeAll(scopeDefSet);
             //System.out.println(stmt.getNode().toString());
-            for (String varID : scopeUseSet) {
+            for (String varID : scopeUnusedSet) {
                 //System.out.print(varID + " ");
                 String varUseID = _info.genVarFigaroID(new VarNode(varID), false);
                 String varDefID = _info.genVarFigaroID(new VarNode(varID), true);
-                _scopeDefList.add(new Pair<>(varDefID, varUseID));
+                _scopeUnusedList.add(new Pair<>(varDefID, varUseID));
             }
             //System.out.println("\n--------------");
+            _info.addStructureDefine(_structure, scopeDefSet);
         }
     }
 
     public ArrayList<Pair<String, String>> getScopeDefList() {
-        return _scopeDefList;
+        return _scopeUnusedList;
     }
 
     String genSource() {
         StringBuilder source = new StringBuilder();
-        for (Pair<String, String> pair : _scopeDefList) {
+        for (Pair<String, String> pair : _scopeUnusedList) {
             ArrayList<String> useList = new ArrayList<>();
             useList.add(pair.getValue());
             useList.add(_figaroID);

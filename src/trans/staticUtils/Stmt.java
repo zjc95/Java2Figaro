@@ -12,11 +12,14 @@ public class Stmt extends StaticMsg {
     private ArrayList<Assign> _assignList = new ArrayList<>();
     private ArrayList<Assign> _scopeDefineList = new ArrayList<>();
     private ArrayList<ControlExpression> _controlExprList = new ArrayList<>();
+    private ArrayList<Stmt> _controlStmtList = new ArrayList<>();
     private Map<String, VarNode> _useList = new HashMap<>();
 
     Stmt(ASTNode node, Stmt structure, int line, int column) {
         super(line, column, node);
         _structure = structure;
+        if (structure != null)
+            structure.addControlStmt(this);
     }
 
     void addAssign(Assign assign) {
@@ -33,6 +36,14 @@ public class Stmt extends StaticMsg {
         _scopeDefineList.add(assign);
     }
 
+    void addControlStmt(Stmt stmt) {
+        _controlStmtList.add(stmt);
+    }
+
+    public ArrayList<Stmt> getControlStmtList() {
+        return _controlStmtList;
+    }
+
     public HashSet<String> getScopeDefine() {
         HashSet<String> scopeDefineSet = new HashSet<>();
         for (Assign assign : _scopeDefineList)
@@ -44,7 +55,7 @@ public class Stmt extends StaticMsg {
         _controlExprList.add(expr);
     }
 
-    ArrayList<ControlExpression> getControlExprList() {
+    public ArrayList<ControlExpression> getControlExprList() {
         return _controlExprList;
     }
 

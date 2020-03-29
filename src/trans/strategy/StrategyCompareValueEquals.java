@@ -2,14 +2,16 @@ package trans.strategy;
 
 import javafx.util.Pair;
 import org.eclipse.jdt.core.dom.*;
+import trans.common.LevelLogger;
 import trans.common.Util;
 import trans.dynamicUtils.DynamicAssign;
 import trans.dynamicUtils.DynamicCtrlExpr;
 import trans.dynamicUtils.DynamicMsg;
+import trans.dynamicUtils.DynamicStmt;
+import trans.staticUtils.ControlExpression;
+import trans.staticUtils.Stmt;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class StrategyCompareValueEquals extends Strategy {
     private Map<String, String> values = new HashMap<>();
@@ -20,8 +22,52 @@ public class StrategyCompareValueEquals extends Strategy {
         return null;
     }
 
-    private Pair<String, Double> checkEquals(DynamicCtrlExpr msg) {
-        ASTNode node = msg.getNode();
+    private boolean checkSupplementaryExpression(ControlExpression expr1, ControlExpression expr2) {
+        ASTNode node1 = expr1.getNode();
+        ASTNode node2 = expr2.getNode();
+
+        if ((!(node1 instanceof InfixExpression)) || (!(node2 instanceof InfixExpression)))
+            return false;
+        InfixExpression infixExpression1 = (InfixExpression) node1;
+        InfixExpression infixExpression2 = (InfixExpression) node2;
+        HashSet<String> hashSet = new HashSet<>();
+        hashSet.add(infixExpression1.getLeftOperand().toString());
+        hashSet.add(infixExpression1.getRightOperand().toString());
+        if ((!(hashSet.contains(infixExpression2.getLeftOperand().toString())))
+                || (!(hashSet.contains(infixExpression2.getRightOperand().toString()))))
+            return false;
+
+        String operator = infixExpression2.getOperator().toString();
+        return operator.equals("==") || operator.equals("<=") || operator.equals(">=");
+    }
+
+    private boolean checkSupplementaryExpression(ControlExpression controlExpression) {
+        //System.out.println("check : " + controlExpression.getNode().toString());
+        Stmt stmt = controlExpression.getParentStmt();
+        for (Stmt structure = stmt.getStructure(); structure != null; structure = structure.getStructure()) {
+            for (ControlExpression expr : structure.getControlExprList()) {
+                //System.out.println("check to : " + expr.getNode().toString());
+                if (checkSupplementaryExpression(controlExpression, expr))
+                    return true;
+            }
+        }
+
+        LinkedList<Stmt> controlStmtList = new LinkedList<>(stmt.getControlStmtList());
+        while (!controlStmtList.isEmpty()) {
+            Stmt child = controlStmtList.pollFirst();
+            for (ControlExpression expr : child.getControlExprList()) {
+                //System.out.println("check to : " + expr.getNode().toString());
+                if (checkSupplementaryExpression(controlExpression, expr))
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    private Pair<String, Double> checkEquals(DynamicCtrlExpr dynamicCtrlExpr) {
+        ControlExpression controlExpression = (ControlExpression) dynamicCtrlExpr.getMsg();
+        ASTNode node = dynamicCtrlExpr.getNode();
         if (node == null)
             return null;
         if (!(node instanceof InfixExpression))
@@ -35,8 +81,8 @@ public class StrategyCompareValueEquals extends Strategy {
         String leftValue = getNodeValue(infixExpression.getLeftOperand());
         String rightValue = getNodeValue(infixExpression.getRightOperand());
 
-        if ((leftValue != null) && (leftValue.equals(rightValue)))
-            return new Pair<>(msg.getFigaroID(), Util.STRATEGY_LOW_PROBABILITY);
+        if ((leftValue != null) && (leftValue.equals(rightValue)) && (!checkSupplementaryExpression(controlExpression)))
+            return new Pair<>(dynamicCtrlExpr.getFigaroID(), Util.STRATEGY_LOW_PROBABILITY);
         return null;
     }
 

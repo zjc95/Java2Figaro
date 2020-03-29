@@ -54,6 +54,7 @@ public class StrategyEntryVariableUse extends Strategy {
                 ArrayList<Pair<String, String>> scopeDefList = ((DynamicStmtEnd) msg).getScopeDefList();
                 for (Pair<String, String> scopeDef : scopeDefList) {
                     HashSet<String> useVarEntryList = entryMap.get(scopeDef.getValue());
+                    if (useVarEntryList == null) continue;
                     useVarEntryList.addAll(entryMap.get(figaroID));
                     entryMap.put(scopeDef.getKey(), useVarEntryList);
                 }

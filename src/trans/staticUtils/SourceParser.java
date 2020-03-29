@@ -668,6 +668,8 @@ class SourceParser {
     private Stmt visit(Name node, Context context) {
         String varID = node.toString();
         VarNode var;
+        if (varID.equals("String"))
+            return null;
         switch (context.getType()){
             case VARIABLE_TYPE_DEF:
                 var = _info.addVar(varID);
