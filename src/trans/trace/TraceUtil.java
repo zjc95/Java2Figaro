@@ -139,11 +139,11 @@ public class TraceUtil {
                 for (Object object : blockOld.statements()) {
                     ASTNode node = copyNode((ASTNode) object);
                     block.statements().add(node);
-                    if (node instanceof ReturnStatement)
+                    if ((node instanceof ReturnStatement) || (node instanceof BreakStatement) || (node instanceof ContinueStatement))
                         return block;
                 }
             } else block.statements().add(stmtOld);
-            if (stmtOld instanceof ReturnStatement)
+            if ((stmtOld instanceof ReturnStatement) || (stmtOld instanceof BreakStatement) || (stmtOld instanceof ContinueStatement))
                 return block;
         }
         block.statements().add(stmtEnd);
@@ -168,7 +168,7 @@ public class TraceUtil {
         for (Object object : oldBlock.statements()) {
             ASTNode node = copyNode((ASTNode) object);
             block.statements().add(node);
-            if (node instanceof ReturnStatement)
+            if ((node instanceof ReturnStatement) || (node instanceof BreakStatement) || (node instanceof ContinueStatement))
                 return block;
         }
         block.statements().addAll(stmtListEnd);

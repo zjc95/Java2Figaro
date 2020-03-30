@@ -8,7 +8,7 @@ import java.util.ArrayList;
 public class Demo {
 
     public static void main(String[] args) {
-        runProject1();
+        runJsonFile();
     }
 
     private static void runPatchSimByFiles() {
@@ -17,7 +17,7 @@ public class Demo {
     }
 
     private static void runJsonFile() {
-        String workPath = "D:\\program\\workspace\\Java2FigaroData";
+        String workPath = "E:\\ProbabilisticProgramming\\Java2FigaroData";
         Transverse.runByJsonFile(new File(workPath));
     }
 
