@@ -3,6 +3,7 @@ package trans.dynamicUtils;
 import javafx.util.Pair;
 import org.eclipse.jdt.core.dom.IfStatement;
 import trans.common.LevelLogger;
+import trans.common.Util;
 import trans.staticUtils.Stmt;
 import trans.staticUtils.VarNode;
 
@@ -31,7 +32,6 @@ public class DynamicStmtEnd extends DynamicMsg {
     }
 
     void parse() {
-        //_figaroID = _info.getStmtFigaroID(this);
         Stmt stmt = (Stmt) _msg;
         _scope = _info.getStructure(stmt);
         _figaroID = _scope.getFigaroID();
@@ -62,7 +62,7 @@ public class DynamicStmtEnd extends DynamicMsg {
             ArrayList<String> useList = new ArrayList<>();
             useList.add(pair.getValue());
             useList.add(_figaroID);
-            source.append(DynamicInfo.genDefinitionSource(pair.getKey(), useList));
+            source.append(DynamicInfo.genDefinitionSource(pair.getKey(), useList, Util.SEMANTIC_LOW_PROBABILITY));
         }
         //System.out.println(source);
         return source.toString();

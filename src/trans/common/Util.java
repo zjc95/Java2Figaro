@@ -12,11 +12,13 @@ import java.util.Map;
 
 public class Util {
     public static final double ALPHA = 0.8;
-    public static final double SEMANTIC_HIGH_PROBABILITY = 0.99;
+    public static final double SEMANTIC_HIGH_PROBABILITY = 1.0;
+    public static final double SEMANTIC_CONSTANT_PROBABILITY = 1.0;
     public static final double SEMANTIC_LOW_PROBABILITY = 0.05;
-    public static final double SEMANTIC_CONSTANT_PROBABILITY = 0.8;
-    public static final double STRATEGY_LOW_PROBABILITY = 0.3;
-    public static final double STRATEGY_HIGH_PROBABILITY = 0.7;
+    public static final double SEMANTIC_BOOLEAN_PROBABILITY = 0.5;
+
+    public static final double STRATEGY_HIGH_PROBABILITY = 0.95;
+    public static final double STRATEGY_LOW_PROBABILITY = 0.8;
 
 
     public static final int JAVA_LEVEL = AST.JLS8;

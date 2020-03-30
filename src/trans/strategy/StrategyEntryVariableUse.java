@@ -39,6 +39,7 @@ public class StrategyEntryVariableUse extends Strategy {
         ArrayList<Pair<String, Double>> observationList = new ArrayList<>();
         Map<String, HashSet<String>> entryMap = new HashMap<>();
         ArrayList<String> entryList = new ArrayList<>();
+        ArrayList<String> retUseList = new ArrayList<>();
 
         for (DynamicMsg msg : msgList) {
             String figaroID = msg.getFigaroID();
@@ -74,12 +75,14 @@ public class StrategyEntryVariableUse extends Strategy {
             }
             entryMap.put(figaroID, entryUseSet);
             //System.out.println(figaroID + ":" + entryUseSet);
+            if (figaroID.equals("Ret"))
+                retUseList.addAll(useList);
         }
 
         HashSet<String> retEntryUseSet = entryMap.get("Ret");
         if (retEntryUseSet.size() < entryList.size())
-            observationList.add(new Pair<>("Ret", Util.STRATEGY_LOW_PROBABILITY));
-
+            for (String retUse : retUseList)
+                observationList.add(new Pair<>(retUse, Util.STRATEGY_LOW_PROBABILITY));
         return observationList;
     }
 }

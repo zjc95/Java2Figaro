@@ -1,6 +1,7 @@
 package trans.dynamicUtils;
 
 import trans.common.LevelLogger;
+import trans.common.Util;
 import trans.staticUtils.Assign;
 import trans.staticUtils.Stmt;
 import trans.staticUtils.VarNode;
@@ -64,14 +65,15 @@ public class DynamicAssign extends DynamicMsg {
         ArrayList<String> useList = new ArrayList<>(_useIDMap.values());
         if (_structure != null)
             useList.add(_structure.getFigaroID());
+        useList.addAll(_info.getConstraintList(_figaroID));
         return useList;
     }
 
     String genSource() {
         StringBuilder source = new StringBuilder();
         for (FieldRelation relation : _relationList)
-            source.append(DynamicInfo.genDefinitionSource(relation.getDef(), relation.getUse()));
-        source.append(DynamicInfo.genDefinitionSource(_figaroID, getUseList()));
+            source.append(DynamicInfo.genDefinitionSource(relation.getDef(), relation.getUse(), Util.SEMANTIC_LOW_PROBABILITY));
+        source.append(DynamicInfo.genDefinitionSource(_figaroID, getUseList(), Util.SEMANTIC_LOW_PROBABILITY));
         return source.toString();
     }
 }

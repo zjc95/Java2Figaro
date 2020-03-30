@@ -261,16 +261,14 @@ public class DynamicInfo {
         return "Stmt_" + key;
     }
 
-    String getStmtFigaroID(DynamicStmtEnd dynamicStmtEnd) {
-        String key = dynamicStmtEnd.getKey();
-        if (!_stmtDefTimeMap.containsKey(key)) {
-            int ctrlTime = _stmtDefTimeMap.get(key);
-            if (ctrlTime == 0)
-                return "Stmt_" + key;
-            return "Stmt_" + key + "_" + ctrlTime;
+    ArrayList<String> getConstraintList(String figaroID) {
+        ArrayList<String> constraintList = new ArrayList<>();
+        for (int i = 0; i < _varObservationList.size(); i++) {
+            Pair<String, Double> pair = _varObservationList.get(i);
+            if (pair.getKey().equals(figaroID))
+                constraintList.add("Constraint_" + i);
         }
-        LevelLogger.error("ERROR : STMT END WITHOUT BEGIN " + key);
-        return "Stmt_" + key;
+        return constraintList;
     }
 
     String genCtrlFigaroID(DynamicCtrlExpr dynamicCtrlExpr) {
@@ -296,21 +294,52 @@ public class DynamicInfo {
         _source.append("object patch {\n");
         _source.append("  def main(args: Array[String]): Unit = {\n");
 
+
+        _source.append("    //-------------Constraint--------------\n");
+        for (int i = 0; i < _varObservationList.size(); i++)
+            _source.append("    val ")
+                    .append("Constraint_")
+                    .append(i)
+                    .append(" = Flip(")
+                    .append(_varObservationList.get(i).getValue()).append(")\n");
+        _source.append("\n");
+
         _source.append("    //-------------Semantic--------------\n");
         for (String varFigaroID : _undefinedVarList)
-            _source.append("    val ").append(varFigaroID).append(" = Flip(").append(Util.STRATEGY_LOW_PROBABILITY).append(")\n");
+            _source.append("    val ")
+                    .append(varFigaroID)
+                    .append(" = Flip(")
+                    .append(Util.STRATEGY_LOW_PROBABILITY).append(")\n");
 
         for (DynamicMsg msg : _msgList)
             _source.append(msg.genSource());
         _source.append("\n");
 
+        /*_source.append("    //-------------Constraint--------------\n");
+        for (int i = 0; i < _varObservationList.size(); i++) {
+            Pair<String, Double> constraint = _varObservationList.get(i);
+            _source.append("    val ");
+            _source.append("Constraint_");
+            _source.append(i);
+            _source.append(" = If(");
+            _source.append(constraint.getKey());
+            _source.append(", Flip(");
+            _source.append(constraint.getValue());
+            _source.append("), Flip(");
+            _source.append(1 - constraint.getValue());
+            _source.append("))\n");
+        }
+        _source.append("\n");*/
+
         _source.append("    //-------------Observation--------------\n");
         for (DynamicMsg msg : _msgList)
             if (msg instanceof DynamicEntry)
-                _source.append("    ").append(msg.getFigaroID()).append(".observe(true)\n");
+                _source.append("    ")
+                        .append(msg.getFigaroID())
+                        .append(".observe(true)\n");
         _source.append("\n");
 
-        _source.append("    //-------------Constraint--------------\n");
+        /*_source.append("    //-------------Constraint--------------\n");
         for (Pair<String, Double> it : _varObservationList) {
             _source.append("    ");
             _source.append(it.getKey());
@@ -320,20 +349,20 @@ public class DynamicInfo {
             _source.append(1 - it.getValue());
             _source.append(")\n");
         }
-        _source.append("\n");
+        _source.append("\n");*/
 
-        _source.append("    //-------------Sampling--------------\n");
-        _source.append("    val samplePatchValid = VariableElimination(Ret)\n");
-        _source.append("    samplePatchValid.start()\n");
-        _source.append("    println(samplePatchValid.probability(Ret, true))\n");
-        _source.append("    samplePatchValid.kill()\n");
-        _source.append("  }\n");
-        _source.append("}\n");
+        _source.append("    //-------------Sampling--------------\n")
+                .append("    val samplePatchValid = VariableElimination(Ret)\n")
+                .append("    samplePatchValid.start()\n")
+                .append("    println(samplePatchValid.probability(Ret, true))\n")
+                .append("    samplePatchValid.kill()\n")
+                .append("  }\n")
+                .append("}\n");
 
         return _source.toString();
     }
 
-    private static String genDefinitionSourceStatement(String def, ArrayList<String> useList) {
+    private static String genDefinitionSourceStatement(String def, ArrayList<String> useList, double lowProbability) {
         int size = useList.size();
         StringBuilder source = new StringBuilder("    val " + def + " = RichCPD(");
         for (String use : useList)
@@ -348,12 +377,12 @@ public class DynamicInfo {
         source.append("      (" + "*");
         for (int i = 1; i < size; i++)
             source.append(", *");
-        source.append(") -> Flip(" + Util.SEMANTIC_LOW_PROBABILITY +"))\n");
+        source.append(") -> Flip(" + lowProbability +"))\n");
 
         return source.toString();
     }
 
-    static String genDefinitionSource(String def, ArrayList<String> useList) {
+    static String genDefinitionSource(String def, ArrayList<String> useList, double lowProbability) {
         int size = useList.size();
         if (size == 0) {
             LevelLogger.warn("WARNING : Empty UseList : def " + def);
@@ -361,13 +390,13 @@ public class DynamicInfo {
         }
 
         if (size == 1)
-            return "    val " + def + " = If(" + useList.get(0) + ", Flip(" + Util.SEMANTIC_HIGH_PROBABILITY + "), Flip(" + Util.SEMANTIC_LOW_PROBABILITY +"))\n";
+            return "    val " + def + " = If(" + useList.get(0) + ", Flip(" + Util.SEMANTIC_HIGH_PROBABILITY + "), Flip(" + lowProbability +"))\n";
 
         StringBuilder source = new StringBuilder();
         for (int i = 1; size > 5; i++) {
             ArrayList<String> tmpUseList = new ArrayList<>(useList.subList(0, 5));
             String tmpDef = def + "_tmp" + i;
-            source.append(genDefinitionSourceStatement(tmpDef, tmpUseList));
+            source.append(genDefinitionSourceStatement(tmpDef, tmpUseList, lowProbability));
             useList.remove(0);
             useList.remove(0);
             useList.remove(0);
@@ -376,7 +405,7 @@ public class DynamicInfo {
             useList.add(0, tmpDef);
             size -= 4;
         }
-        source.append(genDefinitionSourceStatement(def, useList));
+        source.append(genDefinitionSourceStatement(def, useList, lowProbability));
         return source.toString();
     }
 }

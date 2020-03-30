@@ -17,7 +17,7 @@ public class Demo {
     }
 
     private static void runJsonFile() {
-        String workPath = "E:\\ProbabilisticProgramming\\Java2FigaroData";
+        String workPath = "D:\\program\\workspace\\Java2FigaroData";
         Transverse.runByJsonFile(new File(workPath));
     }
 
@@ -44,10 +44,12 @@ public class Demo {
     }
 
     public static void runProject2() {
-        String originProjectPath = "D:\\program\\workspace\\Java2FigaroData2\\smallest_6aaeaf2f_001_1";
-        String copyProjectPath = "D:\\program\\workspace\\Java2FigaroData2\\copy";
-        String srcFilePath = "\\src\\main\\java\\introclassJava\\smallest_6aaeaf2f_001.java";
-        String testName = "smallest_6aaeaf2f_001WhiteboxTest#test1";
+        File projectDir = new File("D:\\program\\workspace\\Java2FigaroData\\digits_d5059e2b_000");
+        File mutantFile = new File(projectDir, "mutants\\digits_d5059e2b_000_CapGen_12.java");
+        String srcFilePath = "\\src\\main\\java\\introclassJava\\digits_d5059e2b_000.java";
+        String testName = "digits_d5059e2b_000BlackboxTest#test4";
+        File originProjectDir = new File(projectDir, "source");
+        String copyProjectPath = "D:\\program\\workspace\\Java2FigaroData\\copy";
         String methodName = "exec";
 
         ArrayList<String> exEntry = new ArrayList<>();
@@ -56,7 +58,7 @@ public class Demo {
         exEntry.add("output");
         exRet.add("output");
 
-        Transverse.TestCaseResult testCaseResult = Transverse.runProjectTestCase(new File(originProjectPath), new File(copyProjectPath), srcFilePath, testName, methodName, exEntry, exRet);
+        Transverse.TestCaseResult testCaseResult = Transverse.runMutantTestCase(originProjectDir, new File(copyProjectPath), srcFilePath, mutantFile, testName, methodName, exEntry, exRet);
         System.out.println(String.format("%.4f", testCaseResult.getProbability() * 100.0));
     }
 

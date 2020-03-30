@@ -91,7 +91,7 @@ public class Transverse {
             for (String test : testList) {
                 TestCaseResult testCaseResult = runProjectTestCase(sourceDirectory, copyProject, srcFilePath, test, methodName, exEntryList, exRetList);
                 LevelLogger.debug("Origin " + test + " : " + String.format("%.6f", testCaseResult._probability * 100.0) + "%");
-                originResultList.add(testCaseResult.getProbability());
+                originResultList.add(testCaseResult.getProbability() * Util.ALPHA);
                 originTraceLists.add(testCaseResult.getTraceList());
                 if (!testCaseResult.checkPass()) {
                     outputString.append(" ").append(testCaseResult.getProbability());
@@ -169,7 +169,7 @@ public class Transverse {
         Util.write(outputString.toString(), outputFile, false);
     }
 
-    private static TestCaseResult runMutantTestCase(File originProject, File copyProject, String srcFilePath, File mutantFile, String testName, String methodName,
+    static TestCaseResult runMutantTestCase(File originProject, File copyProject, String srcFilePath, File mutantFile, String testName, String methodName,
                                             ArrayList<String> exEntry, ArrayList<String> exRet) {
         //-----Copy Project-----
         File copySourceFile = new File(copyProject, srcFilePath);
@@ -192,7 +192,7 @@ public class Transverse {
         return new TestCaseResult(dycInfo, probability, testResult);
     }
 
-    public static TestCaseResult runProjectTestCase(File originProject, File copyProject, String srcFilePath, String testName, String methodName,
+    static TestCaseResult runProjectTestCase(File originProject, File copyProject, String srcFilePath, String testName, String methodName,
                                             ArrayList<String> exEntry, ArrayList<String> exRet) {
         //-----Copy Project-----
         File copySourceFile = new File(copyProject, srcFilePath);

@@ -1,5 +1,6 @@
 package trans.dynamicUtils;
 
+import trans.common.Util;
 import trans.staticUtils.ControlExpression;
 import trans.staticUtils.Stmt;
 import trans.staticUtils.VarNode;
@@ -33,14 +34,16 @@ public class DynamicCtrlExpr extends DynamicMsg {
     }
 
     public ArrayList<String> getUseList() {
-        return new ArrayList<>(_useIDMap.values());
+        ArrayList<String> useList = new ArrayList<>(_useIDMap.values());
+        useList.addAll(_info.getConstraintList(_figaroID));
+        return useList;
     }
 
     String genSource() {
         StringBuilder source = new StringBuilder();
         for (FieldRelation relation : _relationList)
-            source.append(DynamicInfo.genDefinitionSource(relation.getDef(), relation.getUse()));
-        source.append(DynamicInfo.genDefinitionSource(_figaroID, getUseList()));
+            source.append(DynamicInfo.genDefinitionSource(relation.getDef(), relation.getUse(), Util.SEMANTIC_LOW_PROBABILITY));
+        source.append(DynamicInfo.genDefinitionSource(_figaroID, getUseList(), Util.SEMANTIC_BOOLEAN_PROBABILITY));
         return source.toString();
     }
 
