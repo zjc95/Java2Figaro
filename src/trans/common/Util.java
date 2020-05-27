@@ -18,7 +18,7 @@ public class Util {
     public static final double SEMANTIC_BOOLEAN_PROBABILITY = 0.5;
 
     public static final double STRATEGY_HIGH_PROBABILITY = 0.95;
-    public static final double STRATEGY_LOW_PROBABILITY = 0.8;
+    public static final double STRATEGY_LOW_PROBABILITY = 0.7;
 
 
     public static final int JAVA_LEVEL = AST.JLS8;

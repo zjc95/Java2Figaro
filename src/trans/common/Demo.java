@@ -17,7 +17,7 @@ public class Demo {
     }
 
     private static void runJsonFile() {
-        String workPath = "D:\\program\\workspace\\Java2FigaroData";
+        String workPath = "E:\\ProbabilisticProgramming\\Java2FigaroData";
         Transverse.runByJsonFile(new File(workPath));
     }
 

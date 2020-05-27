@@ -38,14 +38,16 @@ public class StrategyMultipleAssign extends Strategy {
     public ArrayList<Pair<String, Double>> parse(ArrayList<DynamicMsg> msgList) {
         ArrayList<Pair<String, Double>> observationList = new ArrayList<>();
         HashSet<String> varAssignSet = new HashSet<>();
+        HashSet<String> varMultiAssignSet = new HashSet<>();
 
         for (DynamicMsg msg : msgList)
             if (msg instanceof DynamicAssign) {
                 DynamicAssign dynamicAssign = (DynamicAssign) msg;
                 String varID = dynamicAssign.getDefVar().getID();
-                if ((varAssignSet.contains(varID)) && (!checkNode(dynamicAssign)) && (!checkUse(dynamicAssign, varID))) {
+                if ((varAssignSet.contains(varID)) && (!varMultiAssignSet.contains(varID)) && (!checkNode(dynamicAssign)) && (!checkUse(dynamicAssign, varID))) {
                     //LevelLogger.debug("MultipleAssign : " + msg.getFigaroID());
-                    observationList.add(new Pair<>(msg.getFigaroID(), Util.STRATEGY_LOW_PROBABILITY));
+                    varMultiAssignSet.add(varID);
+                    observationList.add(new Pair<>(msg.getFigaroID(), 0.8));
                 }
                 varAssignSet.add(varID);
             }

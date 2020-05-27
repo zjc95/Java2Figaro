@@ -91,12 +91,14 @@ public class Transverse {
             for (String test : testList) {
                 TestCaseResult testCaseResult = runProjectTestCase(sourceDirectory, copyProject, srcFilePath, test, methodName, exEntryList, exRetList);
                 LevelLogger.debug("Origin " + test + " : " + String.format("%.6f", testCaseResult._probability * 100.0) + "%");
-                originResultList.add(testCaseResult.getProbability() * Util.ALPHA);
                 originTraceLists.add(testCaseResult.getTraceList());
                 if (!testCaseResult.checkPass()) {
-                    outputString.append(" ").append(testCaseResult.getProbability());
+                    //outputString.append(" ").append(testCaseResult.getProbability());
+                    originResultList.add(0.0);
+                    originResultList.add(0.0);
                     testFailList.add(test);
                 }
+                else originResultList.add(0.5);
             }
             outputString.append("\n");
 
@@ -113,12 +115,14 @@ public class Transverse {
                     LevelLogger.debug(mutantFile.getName() + " " + test + " : " + String.format("%.6f", testCaseResult._probability * 100.0) + "%");
                     patchResultList.add(testCaseResult.getProbability());
                     patchTraceLists.add(testCaseResult.getTraceList());
-                    if (testFailList.contains(test))
+                    if (testFailList.contains(test)) {
+                        patchResultList.add(testCaseResult.getProbability());
                         outputString.append(" ").append(testCaseResult.getProbability());
+                    }
                 }
                 outputString.append(" ").append(genMultiTestResult(originResultList, patchResultList)).append("\n");
-                String patchSimResult = PatchSimParser.analyze(originTraceLists, patchTraceLists) ? "Y" : "N";
-                Util.write(mutantFile.getName() + " " + patchSimResult, patchSimOutput, true);
+                //String patchSimResult = PatchSimParser.analyze(originTraceLists, patchTraceLists) ? "Y" : "N";
+                //Util.write(mutantFile.getName() + " " + patchSimResult, patchSimOutput, true);
             }
             Util.write(outputString.toString(), outputFile, true);
         }

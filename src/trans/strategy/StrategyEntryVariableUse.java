@@ -82,7 +82,7 @@ public class StrategyEntryVariableUse extends Strategy {
         HashSet<String> retEntryUseSet = entryMap.get("Ret");
         if (retEntryUseSet.size() < entryList.size())
             for (String retUse : retUseList)
-                observationList.add(new Pair<>(retUse, Util.STRATEGY_LOW_PROBABILITY));
+                observationList.add(new Pair<>(retUse, 0.8));
         return observationList;
     }
 }
